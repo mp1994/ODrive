@@ -230,6 +230,24 @@ bool Controller::update() {
             vel_setpoint_ = autotuning_.vel_amplitude * c;
             torque_setpoint_ = autotuning_.torque_amplitude * -s;
         } break;
+        case INTERNAL_TORQUE_FEEDBACK_MODE: {
+            float k = 10.0;
+            float e;
+
+            // Read ADC > analog torque sensor
+            float analog_torque_sensor = get_adc_voltage(get_gpio(3)); // Read from GPIO_3 > TODO: do not hard-code this
+            // Convert voltage to displacement to torque measurement
+            // analog_torque_sensor *= gain_volt_to_torque; 
+
+            // Read torque command from USB
+            // input_torque_;
+
+            // Update error = torque command (from USB) - torque measurement
+            e = input_torque_ - analog_torque_sensor;
+
+            // torque setpoint = torque gain * error (TODO: add integral term)
+            torque_setpoint_ = k*e;
+        } break;
         default: {
             set_error(ERROR_INVALID_INPUT_MODE);
             return false;
