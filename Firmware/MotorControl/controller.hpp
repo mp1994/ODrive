@@ -1,20 +1,6 @@
 #ifndef __CONTROLLER_HPP
 #define __CONTROLLER_HPP
 
-enum InputMode {
-    INPUT_MODE_INACTIVE              = 0,
-    INPUT_MODE_PASSTHROUGH           = 1,
-    INPUT_MODE_VEL_RAMP              = 2,
-    INPUT_MODE_POS_FILTER            = 3,
-    INPUT_MODE_MIX_CHANNELS          = 4,
-    INPUT_MODE_TRAP_TRAJ             = 5,
-    INPUT_MODE_TORQUE_RAMP           = 6,
-    INPUT_MODE_MIRROR                = 7,
-    INPUT_MODE_TUNING                = 8,
-    INTERNAL_TORQUE_FEEDBACK_MODE    = 9,
-};
-
-
 
 class Controller : public ODriveIntf::ControllerIntf {
 public:

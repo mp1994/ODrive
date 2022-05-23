@@ -32,5 +32,6 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "algorithm": "cpp"
-    }
+    },
+    "cSpell.enabled": false
 }

@@ -67,6 +67,7 @@ bool Controller::anticogging_calibration(float pos_estimate, float vel_estimate)
         std::abs(vel_estimate) < config_.anticogging.calib_vel_threshold / (float)axis_->encoder_.config_.cpr) {
         config_.anticogging.cogging_map[std::clamp<uint32_t>(config_.anticogging.index++, 0, 3600)] = vel_integrator_torque_;
     }
+    
     if (config_.anticogging.index < 3600) {
         config_.control_mode = CONTROL_MODE_POSITION_CONTROL;
         input_pos_ = config_.anticogging.index * axis_->encoder_.getCoggingRatio();
@@ -230,7 +231,7 @@ bool Controller::update() {
             vel_setpoint_ = autotuning_.vel_amplitude * c;
             torque_setpoint_ = autotuning_.torque_amplitude * -s;
         } break;
-        case INTERNAL_TORQUE_FEEDBACK_MODE: {
+        case INPUT_MODE_INTERNAL_TORQUE_FEEDBACK: {
             float k = 10.0;
             float e;
 
