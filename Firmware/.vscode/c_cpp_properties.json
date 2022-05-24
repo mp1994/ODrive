@@ -43,7 +43,7 @@
                 "${workspaceFolder}/ThirdParty/FreeRTOS/Source/portable/GCC/ARM_CM4F",
                 "${workspaceFolder}/fibre-cpp/include"
             ],
-            "compilerPath": "/usr/bin/g++",
+            "compilerPath": "arm-none-eabi-g++",
             "intelliSenseMode": "gcc-arm",
             "defines": [
                 "__arm__",
