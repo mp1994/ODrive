@@ -344,6 +344,7 @@ void ODrive::sampling_cb() {
     MEASURE_TIME(task_times_.sampling) {
         for (auto& axis: axes) {
             axis.encoder_.sample_now();
+            axis.torque_sensor_.sample_now();
         }
     }
 }
@@ -384,6 +385,7 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
             axis.encoder_.pos_estimate_.reset();
             axis.encoder_.vel_estimate_.reset();
             axis.encoder_.pos_circular_.reset();
+            axis.torque_sensor_.torque_estimate_.reset();
             axis.motor_.Vdq_setpoint_.reset();
             axis.motor_.Idq_setpoint_.reset();
             axis.open_loop_controller_.Idq_setpoint_.reset();
@@ -415,14 +417,21 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
     }
 
     for (auto& axis: axes) {
+        
         // Sub-components should use set_error which will propegate to this error_
         MEASURE_TIME(axis.task_times_.thermistor_update) {
             axis.motor_.fet_thermistor_.update();
             axis.motor_.motor_thermistor_.update();
         }
 
-        MEASURE_TIME(axis.task_times_.encoder_update)
+        MEASURE_TIME(axis.task_times_.encoder_update) {
             axis.encoder_.update();
+        }
+
+        MEASURE_TIME(axis.task_times_.torque_sensor_update) {
+            axis.torque_sensor_.update();
+        }
+    
     }
 
     // Controller of either axis might use the encoder estimate of the other
