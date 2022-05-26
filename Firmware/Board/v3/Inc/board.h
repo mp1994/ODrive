@@ -88,11 +88,13 @@ using TOpAmp = Drv8301;
 
 #include <MotorControl/motor.hpp>
 #include <MotorControl/encoder.hpp>
+#include <MotorControl/torque_sensor.hpp>
 
 extern std::array<Axis, AXIS_COUNT> axes;
 extern Motor motors[AXIS_COUNT];
 extern OnboardThermistorCurrentLimiter fet_thermistors[AXIS_COUNT];
 extern Encoder encoders[AXIS_COUNT];
+extern TorqueSensor torque_sensors[AXIS_COUNT];
 extern Stm32Gpio gpios[GPIO_COUNT];
 
 struct GpioFunction { int mode = 0; uint8_t alternate_function = 0xff; };
