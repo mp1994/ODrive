@@ -232,22 +232,22 @@ bool Controller::update() {
             torque_setpoint_ = autotuning_.torque_amplitude * -s;
         } break;
         case INPUT_MODE_INTERNAL_TORQUE_FEEDBACK: {
-            float k = 10.0;
-            float e;
 
-            // Read ADC > analog torque sensor
-            float analog_torque_sensor = get_adc_voltage(get_gpio(3)); // Read from GPIO_3 > TODO: do not hard-code this
-            // Convert voltage to displacement to torque measurement
-            // analog_torque_sensor *= gain_volt_to_torque; 
+            float e = 0.0f;
 
-            // Read torque command from USB
-            // input_torque_;
+            // Get sampled torque estimate value from TorqueSensor
+            std::optional<float> analog_torque_sensor = axis_->torque_sensor_.torque_estimate_.present();
+            if( !analog_torque_sensor.has_value() ) {
+                set_error(ERROR_INVALID_ESTIMATE);
+                return false;
+            }
 
             // Update error = torque command (from USB) - torque measurement
-            e = input_torque_ - analog_torque_sensor;
+            e = input_torque_ - *analog_torque_sensor;
 
             // torque setpoint = torque gain * error (TODO: add integral term)
-            torque_setpoint_ = k*e;
+            torque_setpoint_ = axis_->torque_sensor_.config_.k_p * e; // + axis_->torque_sensor_.config_.k_i * e_i
+
         } break;
         default: {
             set_error(ERROR_INVALID_INPUT_MODE);
