@@ -4,6 +4,7 @@
 class Axis;
 
 #include "encoder.hpp"
+#include "torque_sensor.hpp"
 #include "acim_estimator.hpp"
 #include "sensorless_estimator.hpp"
 #include "controller.hpp"
@@ -34,6 +35,7 @@ public:
     struct TaskTimes {
         TaskTimer thermistor_update;
         TaskTimer encoder_update;
+        TaskTimer torque_sensor_update;
         TaskTimer sensorless_estimator_update;
         TaskTimer endstop_update;
         TaskTimer can_heartbeat;
@@ -108,6 +110,7 @@ public:
             uint16_t default_dir_gpio_pin,
             osPriority thread_priority,
             Encoder& encoder,
+            TorqueSensor& torque_sensor,
             SensorlessEstimator& sensorless_estimator,
             Controller& controller,
             Motor& motor,
@@ -158,6 +161,7 @@ public:
     Config_t config_;
 
     Encoder& encoder_;
+    TorqueSensor& torque_sensor_;
     AcimEstimator acim_estimator_;
     SensorlessEstimator& sensorless_estimator_;
     Controller& controller_;

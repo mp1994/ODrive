@@ -12,6 +12,7 @@ Axis::Axis(int axis_num,
            uint16_t default_dir_gpio_pin,
            osPriority thread_priority,
            Encoder& encoder,
+           TorqueSensor& torque_sensor,
            SensorlessEstimator& sensorless_estimator,
            Controller& controller,
            Motor& motor,
@@ -24,6 +25,7 @@ Axis::Axis(int axis_num,
       default_dir_gpio_pin_(default_dir_gpio_pin),
       thread_priority_(thread_priority),
       encoder_(encoder),
+      torque_sensor_(torque_sensor),
       sensorless_estimator_(sensorless_estimator),
       controller_(controller),
       motor_(motor),
@@ -33,6 +35,7 @@ Axis::Axis(int axis_num,
       mechanical_brake_(mechanical_brake)
 {
     encoder_.axis_ = this;
+    torque_sensor_.axis_ = this;
     sensorless_estimator_.axis_ = this;
     controller_.axis_ = this;
     motor_.axis_ = this;
