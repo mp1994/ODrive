@@ -13,7 +13,7 @@ class TorqueSensor {       // Da capire cosa mettere qui al posto di ODriveIntf:
 public:
     struct Config_t {
 
-        uint16_t torquesensor_gpio_pin = 3;   // GPIO pin for ADC readout of torque sensor
+        uint16_t torquesensor_gpio_pin = 0xFF;  // GPIO pin for ADC readout of torque sensor
         
         // Sensor gains
         float K_VtoX = 1.0f;             // Voltage to Displacement gain [m/V]
@@ -28,11 +28,12 @@ public:
 
     };
 
-    TorqueSensor(TIM_HandleTypeDef* timer, Stm32Gpio adc_gpio);
+    TorqueSensor(Stm32Gpio adc_gpio);
+    TorqueSensor(uint16_t gpio_num);
     
     bool apply_config(ODriveIntf::MotorIntf::MotorType motor_type);
     void setup();
-    void set_error(void);
+    void set_error();
     bool do_checks();
 
     bool run_offset_calibration();
@@ -40,10 +41,10 @@ public:
     bool read_sampled_gpio(Stm32Gpio gpio);
     bool update();
 
-    TIM_HandleTypeDef* timer_;
+    uint16_t pin_number_;
     Stm32Gpio adc_gpio_;
     Axis* axis_ = nullptr; // set by Axis constructor
-
+    bool enabled_ = false;
     Config_t config_;
 
     // Error error_ = ERROR_NONE;
@@ -61,10 +62,6 @@ public:
     OutputPort<float> torque_estimate_ = 0.0f;
 
     bool torque_estimate_valid_ = false;
-
-    int16_t tim_cnt_sample_ = 0; // 
-    static const constexpr GPIO_TypeDef* ports_to_sample[] = { GPIOA, GPIOB, GPIOC };
-    uint16_t port_samples_[sizeof(ports_to_sample) / sizeof(ports_to_sample[0])];
 
 };
 

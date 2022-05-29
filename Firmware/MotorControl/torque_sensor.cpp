@@ -3,9 +3,18 @@
 #include <Drivers/STM32/stm32_system.h>
 #include <bitset>
 
-TorqueSensor::TorqueSensor(TIM_HandleTypeDef* timer, Stm32Gpio adc_gpio) : 
-        timer_(timer), adc_gpio_(adc_gpio)
+TorqueSensor::TorqueSensor(Stm32Gpio adc_gpio) : 
+        adc_gpio_(adc_gpio)
 {
+    enabled_ = true;
+}
+
+TorqueSensor::TorqueSensor(uint16_t gpio_num) :
+        pin_number_(gpio_num)
+{
+    if( gpio_num > 0 && gpio_num < 9 ) {
+        enabled_ = true;
+    }
 }
 
 bool TorqueSensor::apply_config(ODriveIntf::MotorIntf::MotorType motor_type) {
@@ -17,10 +26,8 @@ bool TorqueSensor::apply_config(ODriveIntf::MotorIntf::MotorType motor_type) {
 
 void TorqueSensor::setup() {
 
-    HAL_TIM_Encoder_Start(timer_, TIM_CHANNEL_ALL);
-
     // Do GPIO pin setting here
-    adc_gpio_ = get_gpio(config_.torquesensor_gpio_pin);
+    adc_gpio_ = get_gpio(config_.torquesensor_gpio_pin); // FIX this: why do we need Stm32Gpio as input if we set it here from torquesensor_gpio_pin ?
     adc_gpio_.config(GPIO_MODE_INPUT, GPIO_MODE_ANALOG); 
 
     // adc_gpio.subscribe() > set an ISR for the pin > do we need it? 
@@ -35,6 +42,11 @@ void TorqueSensor::set_error(void) {
 // bool TorqueSensor::do_checks(){
 //     return error_ == ERROR_NONE;
 // }
+
+// We probably need to implement this in a smarter way...
+bool TorqueSensor::do_checks() {
+    return enabled_;
+}
 
 
 // This function should only sample data when called by a high-priority ISR
@@ -75,6 +87,6 @@ bool TorqueSensor::update() {
     // Output from TorqueSensor to Controller
     torque_estimate_ = torque_nm_estimate_;
 
-    return true;
+    return enabled_;
 
 }
