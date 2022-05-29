@@ -112,15 +112,11 @@ Encoder encoders[AXIS_COUNT] = {
     }
 };
 
-// Attention: this is using the same htim / TIM as the encoders
-// Maybe this is a problem ? Is the encoder actually using the TIM - being in SPI mode - ??
 TorqueSensor torque_sensors[AXIS_COUNT] {
     {
-        &htim3, 
         Stm32Gpio()
     },
     {
-        &htim4, 
         Stm32Gpio()
     }
 };
