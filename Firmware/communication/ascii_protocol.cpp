@@ -176,10 +176,10 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
         
-        uint8_t tx_data[12];
-        memcpy(tx_data, data, 12);
+        uint8_t tx_data[3*sizeof(float32_t)];
+        std::memcpy(tx_data, data, 3*sizeof(float32_t));
 
-        sink_.write({(const uint8_t*)tx_data, 12});
+        sink_.write({(const uint8_t*)tx_data, 3*sizeof(float32_t)});
         sink_.maybe_start_async_write();
 
     }
