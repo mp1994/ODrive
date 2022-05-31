@@ -65,6 +65,34 @@ void AsciiProtocol::respond(bool include_checksum, const char * fmt, TArgs&& ...
     sink_.maybe_start_async_write();
 }
 
+// @brief Sends a line on the specified output AS BYTE ARRAY > potentially improve speed
+template<typename ... TArgs>
+void AsciiProtocol::respond_byte(bool include_checksum, uint8_t* tx_data, size_t count) {
+    char tx_buf[64];
+
+    // size_t len = sizeof(tx_data)/sizeof(char);
+    // // Silently truncate the output if it's too long for the buffer.
+    // len = std::min(len, sizeof(tx_buf));
+
+    // TODO: implement checksum as starting/ending byte (?)
+    // if (include_checksum) {
+    //     uint8_t checksum = 0;
+    //     for (size_t i = 0; i < len; ++i)
+    //         checksum ^= tx_buf[i];
+    //     len += snprintf(tx_buf + len, sizeof(tx_buf) - len, "*%u\r\n", checksum);
+    // } else {
+    //     len += snprintf(tx_buf + len, sizeof(tx_buf) - len, "\r\n");
+    // }
+
+    // Silently truncate the output if it's too long for the buffer.
+    // len = std::min(len, sizeof(tx_buf));
+
+    memcpy(tx_buf, tx_data, count);
+
+    sink_.write({(const uint8_t*)tx_buf, count});
+    sink_.maybe_start_async_write();
+}
+
 
 // @brief Executes an ASCII protocol command
 // @param buffer buffer of ASCII encoded characters
@@ -143,8 +171,17 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         axis.controller_.input_torque_ = torque_setpoint;
         axis.watchdog_feed();
 
-        respond(use_checksum, "%f %f", (double)axis.encoder_.pos_estimate_.any().value_or(0.0f), 
-                                       (double)axis.motor_.current_control_.Iq_measured_);          // note: Iq_measured is not an OutputPort
+        float32_t data[3];
+        data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
+        data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
+        data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
+        
+        uint8_t tx_data[12];
+        memcpy(tx_data, data, 12);
+
+        sink_.write({(const uint8_t*)tx_data, 12});
+        sink_.maybe_start_async_write();
+
     }
 
 }
