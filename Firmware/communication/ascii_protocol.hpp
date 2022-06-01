@@ -43,6 +43,9 @@ private:
     bool read_active_ = true;
 
     fibre::BufferedStreamSink<512> sink_;
+
+    uint8_t tx_buf_[64]; // Byte array response buffer 
+
 };
 
 #endif // __ASCII_PROTOCOL_HPP
