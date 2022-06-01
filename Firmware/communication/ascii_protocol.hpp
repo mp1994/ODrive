@@ -31,7 +31,7 @@ private:
     void cmd_encoder(char * pStr, bool use_checksum);
 
     template<typename ... TArgs> void respond(bool include_checksum, const char * fmt, TArgs&& ... args);
-    template<typename ... TArgs> void respond_byte(bool include_checksum, uint8_t* tx_data, size_t count);
+    void respond_byte(bool include_checksum, uint8_t* tx_data, size_t count);
     void process_line(fibre::cbufptr_t buffer);
     void on_write_finished(fibre::WriteResult result);
     void on_read_finished(fibre::ReadResult result);

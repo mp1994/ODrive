@@ -65,8 +65,7 @@ void AsciiProtocol::respond(bool include_checksum, const char * fmt, TArgs&& ...
     sink_.maybe_start_async_write();
 }
 
-// @brief Sends a line on the specified output AS BYTE ARRAY > potentially improve speed
-template<typename ... TArgs>
+// @brief Sends data AS BYTE ARRAY > potentially improve speed
 void AsciiProtocol::respond_byte(bool include_checksum, uint8_t* tx_data, size_t count) {
     char tx_buf[64];
 
@@ -176,6 +175,7 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
         
+        // TX buffer
         uint8_t tx_data[3*sizeof(float32_t)];
         std::memcpy(tx_data, data, 3*sizeof(float32_t));
 
