@@ -29,7 +29,6 @@ target/
 
 # Tup
 .tup
-tup.config
 
 # Sphinx documentation
 /docs/_build/
