@@ -145,16 +145,20 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         axis.watchdog_feed();
 
         // Get requested data
-        float32_t data[3];
+        uint8_t count_data  = 3;
+        uint8_t count_bytes = count_data*sizeof(float32_t);
+        float32_t data[count_data];
         data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
         data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
         
         // Put data into TX buffer
         memcpy(tx_buf_, data, 3*sizeof(float32_t));
+        // Append terminator
+        tx_buf_[count_bytes] = 0x0A;
 
         // Write over USB 
-        sink_.write({(const uint8_t*) tx_buf_, 3*sizeof(float32_t)});
+        sink_.write({(const uint8_t*) tx_buf_, 3*sizeof(float32_t)+1});
         sink_.maybe_start_async_write();
 
     }
