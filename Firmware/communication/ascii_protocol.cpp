@@ -109,7 +109,7 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
 
     // check incoming packet type
     switch(cmd[0]) {
-        case 'a': cmd_set_torque_get_feedback(cmd, use_checksum);     break;  // custom: torque command + feedback (Iq, encoder pos)
+        case 'a': cmd_set_torque_get_feedback(cmd, use_checksum);     break;  // custom: torque command + feedback (pos vel Iq)
         case 'p': cmd_set_position(cmd, use_checksum);                break;  // position control
         case 'q': cmd_set_position_wl(cmd, use_checksum);             break;  // position control with limits
         case 'v': cmd_set_velocity(cmd, use_checksum);                break;  // velocity control
@@ -139,7 +139,7 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         respond(use_checksum, "invalid motor %u", motor_number);
     } else {
         Axis& axis = axes[motor_number];
-        // DO WE REALLY NEED THIS ??
+        // DO WE REALLY NEED THIS ?? --> no
         // axis.controller_.config_.control_mode = Controller::CONTROL_MODE_TORQUE_CONTROL; 
         axis.controller_.input_torque_ = torque_setpoint;
         axis.watchdog_feed();

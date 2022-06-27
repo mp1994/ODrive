@@ -44,7 +44,7 @@ private:
 
     fibre::BufferedStreamSink<512> sink_;
 
-    uint8_t tx_buf_[64]; // Byte array response buffer 
+    uint8_t tx_buf_[512]; // Byte array response buffer 
 
 };
 
