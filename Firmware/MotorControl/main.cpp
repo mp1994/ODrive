@@ -527,6 +527,8 @@ static void rtos_main(void*) {
     // must happen after communication is initialized
     pwm0_input.init();
 
+    osDelay(500);
+
     // Set up the CS pins for absolute encoders (TODO: move to GPIO init switch statement)
     for(auto& axis : axes){
         if(axis.encoder_.config_.mode & Encoder::MODE_FLAG_ABS){
