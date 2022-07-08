@@ -515,6 +515,7 @@ static void rtos_main(void*) {
     // Init USB device
     MX_USB_DEVICE_Init();
 
+    osDelay(100);
 
     // Start ADC for temperature measurements and user measurements
     start_general_purpose_adc();
@@ -522,6 +523,8 @@ static void rtos_main(void*) {
     //osDelay(100);
     // Init communications (this requires the axis objects to be constructed)
     init_communication();
+
+    osDelay(100);
 
     // Start pwm-in compare modules
     // must happen after communication is initialized
@@ -550,6 +553,8 @@ static void rtos_main(void*) {
     for(auto& axis: axes){
         axis.acim_estimator_.idq_src_.connect_to(&axis.motor_.Idq_setpoint_);
     }
+
+    osDelay(100);
 
     // Start PWM and enable adc interrupts/callbacks
     start_adc_pwm();
