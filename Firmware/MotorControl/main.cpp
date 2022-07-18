@@ -421,8 +421,10 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
             axis.motor_.motor_thermistor_.update();
         }
 
-        MEASURE_TIME(axis.task_times_.encoder_update)
+        MEASURE_TIME(axis.task_times_.encoder_update) {
             axis.encoder_.update();
+        }      
+
     }
 
     // Controller of either axis might use the encoder estimate of the other

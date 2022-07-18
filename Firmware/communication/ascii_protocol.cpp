@@ -132,6 +132,8 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
     unsigned motor_number;
     float torque_setpoint;
 
+    float trt_torque = get_adc_voltage(get_gpio(7));
+
     // Set torque
     if (sscanf(pStr+2, "%u %f", &motor_number, &torque_setpoint) < 2) {
         respond(use_checksum, "invalid command format");
@@ -145,20 +147,21 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         axis.watchdog_feed();
 
         // Get requested data
-        uint8_t count_data  = 3;
+        uint8_t count_data  = 4;
         uint8_t count_bytes = count_data*sizeof(float32_t);
         float32_t data[count_data];
         data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
         data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
-        
+        data[3] = (float32_t) trt_torque;
+
         // Put data into TX buffer
-        memcpy(tx_buf_, data, 3*sizeof(float32_t));
+        memcpy(tx_buf_, data, count_bytes);
         // Append terminator
         tx_buf_[count_bytes] = 0x0A;
 
         // Write over USB 
-        sink_.write({(const uint8_t*) tx_buf_, 3*sizeof(float32_t)+1});
+        sink_.write({(const uint8_t*) tx_buf_, count_bytes+1});
         sink_.maybe_start_async_write();
 
     }
