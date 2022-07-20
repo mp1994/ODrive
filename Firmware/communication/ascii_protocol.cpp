@@ -132,7 +132,7 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
     unsigned motor_number;
     float torque_setpoint;
 
-    float trt_torque = get_adc_voltage(get_gpio(7));
+    float trt_torque = get_adc_voltage(get_gpio(3));
 
     // Set torque
     if (sscanf(pStr+2, "%u %f", &motor_number, &torque_setpoint) < 2) {
