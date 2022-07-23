@@ -145,9 +145,8 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         axis.watchdog_feed();
 
         // Get requested data
-        uint8_t count_data  = 4;
-        uint8_t count_bytes = count_data*sizeof(float32_t);
-        float32_t data[count_data];
+        const size_t count_bytes = 4*sizeof(float32_t);
+        float32_t data[4];
         data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
         data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
