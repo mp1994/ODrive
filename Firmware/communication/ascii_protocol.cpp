@@ -132,8 +132,6 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
     unsigned motor_number;
     float torque_setpoint;
 
-    float trt_torque = get_adc_voltage(get_gpio(3));
-
     // Set torque
     if (sscanf(pStr+2, "%u %f", &motor_number, &torque_setpoint) < 2) {
         respond(use_checksum, "invalid command format");
@@ -153,7 +151,7 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
         data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
-        data[3] = (float32_t) trt_torque;
+        data[3] = (float32_t) axis.controller_.trt_reading_;
 
         // Put data into TX buffer
         memcpy(tx_buf_, data, count_bytes);
