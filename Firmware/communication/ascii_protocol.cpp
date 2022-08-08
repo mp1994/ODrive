@@ -70,9 +70,14 @@ void AsciiProtocol::respond(bool include_checksum, const char * fmt, TArgs&& ...
 // @param buffer buffer of ASCII encoded characters
 // @param len size of the buffer
 void AsciiProtocol::process_line(cbufptr_t buffer) {
+
+    odrv.n_evt_ascii_++;
+
     static_assert(sizeof(char) == sizeof(uint8_t));
     
     // scan line to find beginning of checksum and prune comment
+    // *** SKIP THIS as it is not used
+    /*
     uint8_t checksum = 0;
     size_t checksum_start = SIZE_MAX;
     for (size_t i = 0; i < buffer.size(); ++i) {
@@ -88,6 +93,7 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
             }
         }
     }
+    */
 
     // copy everything into a local buffer so we can insert null-termination
     char cmd[MAX_LINE_LENGTH + 1];
@@ -96,6 +102,8 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
     cmd[len] = 0; // null-terminate
 
     // optional checksum validation
+    // *** SKIP THIS as it is not used
+    /*
     bool use_checksum = (checksum_start < len);
     if (use_checksum) {
         unsigned int received_checksum;
@@ -105,7 +113,8 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
         len = checksum_start - 1; // prune checksum and asterisk
         cmd[len] = 0; // null-terminate
     }
-
+    */
+   const bool use_checksum = false;
 
     // check incoming packet type
     switch(cmd[0]) {
@@ -144,8 +153,10 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         axis.controller_.input_torque_ = torque_setpoint;
         axis.watchdog_feed();
 
+        uint32_t n_cb = odrv.n_evt_control_loop_;
+
         // Get requested data
-        const size_t count_bytes = 4*sizeof(float32_t);
+        size_t count_bytes = 4*sizeof(float32_t);
         float32_t data[4];
         data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
         data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
@@ -153,12 +164,14 @@ void AsciiProtocol::cmd_set_torque_get_feedback(char * pStr, bool use_checksum) 
         data[3] = (float32_t) axis.controller_.trt_reading_;
 
         // Put data into TX buffer
-        memcpy(tx_buf_, data, count_bytes);
+        memcpy(&tx_buf_[0], &n_cb, sizeof(uint32_t));
+        memcpy(&tx_buf_[4], data, count_bytes);
         // Append terminator
+        count_bytes += sizeof(uint32_t); // 20
         tx_buf_[count_bytes] = 0x0A;
 
         // Write over USB 
-        sink_.write({(const uint8_t*) tx_buf_, count_bytes+1});
+        sink_.write({(const uint8_t*) tx_buf_, 1+count_bytes});
         sink_.maybe_start_async_write();
 
     }

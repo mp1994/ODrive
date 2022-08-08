@@ -241,6 +241,7 @@ public:
     uint32_t last_update_timestamp_ = 0;
     uint32_t n_evt_sampling_ = 0;
     uint32_t n_evt_control_loop_ = 0;
+    uint32_t n_evt_ascii_ = 0;
     bool task_timers_armed_ = false;
     TaskTimes task_times_;
     const bool otp_valid_ = ((uint8_t*)FLASH_OTP_BASE)[0] != 0xff;
