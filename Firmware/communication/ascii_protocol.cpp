@@ -138,7 +138,7 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
     }
 }
 
-void AsciiProtocol::cmd_set_torque_get_feedback_0(char * pStr) {
+void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
 
     if( pStr[0] == 'a' && pStr[5] == 't' ) {
 
@@ -163,7 +163,6 @@ void AsciiProtocol::cmd_set_torque_get_feedback_0(char * pStr) {
         /* Put data into TX buffer */
         memcpy(&tx_buf_[0], &n_cb, sizeof(uint32_t));
         memcpy(&tx_buf_[4], data, count_bytes);
-        // Append terminator
         count_bytes += sizeof(uint32_t); // 20
         tx_buf_[count_bytes] = 0x0A;
 
@@ -173,12 +172,12 @@ void AsciiProtocol::cmd_set_torque_get_feedback_0(char * pStr) {
 
     }
     else {
-        respond(false, "---invalid command %c %c ---", pStr[0], pStr[5]);
+        respond(false, "0 invalid command ");
     }
 
 }
 
-void AsciiProtocol::cmd_set_torque_get_feedback_1(char * pStr) {
+void AsciiProtocol::cmd_set_torque_get_feedback_1(char* pStr) {
 
     if( pStr[0] == 'b' && pStr[5] == 't' ) {
 
@@ -213,7 +212,7 @@ void AsciiProtocol::cmd_set_torque_get_feedback_1(char * pStr) {
 
     }
     else {
-        respond(false, "invalid command");
+        respond(false, "1 invalid command");
     }
 
 }
