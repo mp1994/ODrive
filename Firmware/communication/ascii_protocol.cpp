@@ -71,8 +71,6 @@ void AsciiProtocol::respond(bool include_checksum, const char * fmt, TArgs&& ...
 // @param len size of the buffer
 void AsciiProtocol::process_line(cbufptr_t buffer) {
 
-    odrv.n_evt_ascii_++;
-
     static_assert(sizeof(char) == sizeof(uint8_t));
     
     // scan line to find beginning of checksum and prune comment
@@ -141,6 +139,8 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
 void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
 
     if( pStr[0] == 'a' && pStr[5] == 't' ) {
+
+        odrv.n_evt_ascii_++;
 
         /* Get float setpoint */
         float32_t torque_setpoint;
