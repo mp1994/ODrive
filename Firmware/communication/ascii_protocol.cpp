@@ -21,6 +21,9 @@ using namespace fibre;
 /* Private macros ------------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
 /* Global constant data ------------------------------------------------------*/
+const size_t float_enc_size = ascii85_get_max_encoded_length(sizeof(float32_t));
+const size_t float_dec_size = ascii85_get_max_decoded_length(float_enc_size);
+
 /* Global variables ----------------------------------------------------------*/
 /* Private constant data -----------------------------------------------------*/
 
@@ -140,7 +143,7 @@ void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
 
     if( pStr[0] == 'a' && pStr[5] == 't' ) {
 
-        odrv.n_evt_ascii_++;
+        odrv.n_evt_ascii_++;    // counter for debugging
 
         /* Get float setpoint */
         float32_t torque_setpoint;
@@ -152,7 +155,6 @@ void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
         axis.watchdog_feed();
 
         /* Pack feedback data */
-        size_t count_bytes = 4*sizeof(float32_t);
         uint32_t n_cb = odrv.n_evt_control_loop_;
         float32_t data[4];
         data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
@@ -160,14 +162,17 @@ void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
         data[3] = (float32_t) axis.controller_.trt_reading_;
 
-        /* Put data into TX buffer */
-        memcpy(&tx_buf_[0], &n_cb, sizeof(uint32_t));
-        memcpy(&tx_buf_[4], data, count_bytes);
-        count_bytes += sizeof(uint32_t); // 20
-        tx_buf_[count_bytes] = 0x0A;
+        /* Encode feedback data */
+        size_t enc_size = 0;
+        enc_size += encode_ascii85((const uint8_t*) &n_cb, sizeof(uint32_t), &tx_buf_[0], 512);
+        if( enc_size < 0 ) respond(false, "0 invalid uint32_t encoding");
+        enc_size += encode_ascii85((const uint8_t*) data, 4*sizeof(float), &tx_buf_[enc_size], 512);
+        if( enc_size < 0 ) respond(false, "0 invalid float encoding");
+
+        tx_buf_[enc_size] = 0x0A; // terminator ('\n')
 
         /* Write over USB */
-        sink_.write({(const uint8_t*) tx_buf_, 1+count_bytes});
+        sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be 26 bytes
         sink_.maybe_start_async_write();
 
     }
@@ -542,4 +547,303 @@ void AsciiProtocol::on_read_finished(ReadResult result) {
 void AsciiProtocol::start() {
     TransferHandle dummy;
     rx_channel_->start_read(rx_buf_, &dummy, MEMBER_CB(this, on_read_finished));
+}
+
+static const uint8_t base_char = 33u; // '!' -- note that (85 + 33) < 128
+
+static const int32_t ascii85_in_length_max = 65536;
+
+static const bool ascii85_decode_z_for_zero  = false;
+static const bool ascii85_encode_z_for_zero  = false;
+
+static const bool ascii85_check_decode_chars = true;
+
+#if 0
+static inline bool ascii85_char_ok (uint8_t c)
+{
+    return ((c >= 33u) && (c <= 117u));
+}
+#endif
+
+static inline bool ascii85_char_ng (uint8_t c)
+{
+    return ((c < 33u) || (c > 117u));
+}
+
+/*!
+ * @brief encode_ascii85: encode binary input into Ascii85
+ * @param[in] inp pointer to a buffer of unsigned bytes
+ * @param[in] in_length the number of bytes at inp to encode
+ * @param[in] outp pointer to a buffer for the encoded data
+ * @param[in] out_max_length available space at outp in bytes; must be >=
+ * ascii85_get_max_encoded_length(in_length)
+ * @return number of bytes in the encoded value at outp if non-negative; error code from
+ * ascii85_errs_e if negative
+ * @par Possible errors include: ascii85_err_in_buf_too_large, ascii85_err_out_buf_too_small
+ */
+int32_t encode_ascii85 (const uint8_t *inp, int32_t in_length, uint8_t *outp, int32_t out_max_length)
+{
+    int32_t out_length = ascii85_get_max_encoded_length(in_length);
+
+    if (out_length < 0)
+    {
+        // ascii85_get_max_encoded_length() already returned an error, so return that
+    }
+    else if (out_length > out_max_length)
+    {
+        out_length = (int32_t )ascii85_err_out_buf_too_small;
+    }
+    else
+    {
+        int32_t in_rover = 0;
+
+        out_length = 0; // we know we can increment by 5 * ceiling(in_length/4)
+
+        while (in_rover < in_length)
+        {
+            uint32_t chunk;
+            int32_t chunk_len = in_length - in_rover;
+
+            if (chunk_len >= 4)
+            {
+                chunk  = (((uint32_t )inp[in_rover++]) << 24u);
+                chunk |= (((uint32_t )inp[in_rover++]) << 16u);
+                chunk |= (((uint32_t )inp[in_rover++]) <<  8u);
+                chunk |= (((uint32_t )inp[in_rover++])       );
+            }
+            else
+            {
+                chunk  =                           (((uint32_t )inp[in_rover++]) << 24u);
+                chunk |= ((in_rover < in_length) ? (((uint32_t )inp[in_rover++]) << 16u) : 0u);
+                chunk |= ((in_rover < in_length) ? (((uint32_t )inp[in_rover++]) <<  8u) : 0u);
+                chunk |= ((in_rover < in_length) ? (((uint32_t )inp[in_rover++])       ) : 0u);
+            }
+
+            if (/*lint -e{506} -e{774}*/ascii85_encode_z_for_zero && (0u == chunk) && (chunk_len >= 4))
+            {
+                outp[out_length++] = (uint8_t )'z';
+            }
+            else
+            {
+                outp[out_length + 4] = (chunk % 85u) + base_char;
+                chunk /= 85u;
+                outp[out_length + 3] = (chunk % 85u) + base_char;
+                chunk /= 85u;
+                outp[out_length + 2] = (chunk % 85u) + base_char;
+                chunk /= 85u;
+                outp[out_length + 1] = (chunk % 85u) + base_char;
+                chunk /= 85u;
+                outp[out_length    ] = (uint8_t )chunk + base_char;
+                // we don't need (chunk % 85u) on the last line since (((((2^32 - 1) / 85) / 85) / 85) / 85) = 82.278
+
+                if (chunk_len >= 4)
+                {
+                    out_length += 5;
+                }
+                else
+                {
+                    out_length += (chunk_len + 1); // see note above re: Ascii85 length
+                }
+            }
+        }
+    }
+
+    return out_length;
+}
+
+/*!
+ * @brief decode_ascii85: decode Ascii85 input to binary output
+ * @param[in] inp pointer to a buffer of Ascii85 encoded unsigned bytes
+ * @param[in] in_length the number of bytes at inp to decode
+ * @param[in] outp pointer to a buffer for the decoded data
+ * @param[in] out_max_length available space at outp in bytes; must be >=
+ * ascii85_get_max_decoded_length(in_length)
+ * @return number of bytes in the decoded value at outp if non-negative; error code from
+ * ascii85_errs_e if negative
+ * @par Possible errors include: ascii85_err_in_buf_too_large, ascii85_err_out_buf_too_small,
+ * ascii85_err_bad_decode_char, ascii85_err_decode_overflow
+ */
+int32_t decode_ascii85 (const uint8_t *inp, int32_t in_length, uint8_t *outp, int32_t out_max_length)
+{
+    int32_t out_length = ascii85_get_max_decoded_length(in_length);
+
+    if (out_length < 0)
+    {
+        // get_max_decoded_length() already returned an error, so return that
+    }
+    else if (out_length > out_max_length)
+    {
+        out_length = (int32_t )ascii85_err_out_buf_too_small;
+    }
+    else
+    {
+        int32_t in_rover = 0;
+
+        out_length = 0; // we know we can increment by 4 * ceiling(in_length/5)
+
+        while (in_rover < in_length)
+        {
+            uint32_t chunk;
+            int32_t chunk_len = in_length - in_rover;
+
+            if (/*lint -e{506} -e{774}*/ascii85_decode_z_for_zero && ((uint8_t )'z' == inp[in_rover]))
+            {
+                in_rover += 1;
+                chunk = 0u;
+                chunk_len = 5; // to make out_length increment correct
+            }
+            else if (/*lint -e{506} -e{774}*/ascii85_check_decode_chars
+                    && (                       ascii85_char_ng(inp[in_rover    ])
+                        || ((chunk_len > 1) && ascii85_char_ng(inp[in_rover + 1]))
+                        || ((chunk_len > 2) && ascii85_char_ng(inp[in_rover + 2]))
+                        || ((chunk_len > 3) && ascii85_char_ng(inp[in_rover + 3]))
+                        || ((chunk_len > 4) && ascii85_char_ng(inp[in_rover + 4]))))
+            {
+                out_length = (int32_t )ascii85_err_bad_decode_char;
+                break; // leave while loop early to report error
+            }
+            else if (chunk_len >= 5)
+            {
+                chunk  = inp[in_rover++] - base_char;
+                chunk *= 85u; // max: 84 * 85 = 7,140
+                chunk += inp[in_rover++] - base_char;
+                chunk *= 85u; // max: (84 * 85 + 84) * 85 = 614,040
+                chunk += inp[in_rover++] - base_char;
+                chunk *= 85u; // max: (((84 * 85 + 84) * 85) + 84) * 85 = 52,200,540
+                chunk += inp[in_rover++] - base_char;
+                // max: (((((84 * 85 + 84) * 85) + 84) * 85) + 84) * 85 = 4,437,053,040 oops! 0x108780E70
+                if (chunk > (UINT32_MAX / 85u))
+                {
+                    // multiply would overflow
+                    out_length = (int32_t )ascii85_err_decode_overflow; // bad input
+                    break; // leave while loop early to report error
+                }
+                else
+                {
+                    uint8_t addend = inp[in_rover++] - base_char;
+
+                    chunk *= 85u; // multiply will not overflow due to test above
+
+                    if (chunk > (UINT32_MAX - addend))
+                    {
+                        /// add would overflow
+                        out_length = (int32_t )ascii85_err_decode_overflow; // bad input
+                        break; // leave while loop early to report error
+                    }
+                    else
+                    {
+                        chunk += addend;
+                    }
+                }
+            }
+            else
+            {
+                chunk  = inp[in_rover++] - base_char;
+                chunk *= 85u; // max: 84 * 85 = 7,140
+                chunk += ((in_rover < in_length) ? (inp[in_rover++] - base_char) : 84u);
+                chunk *= 85u; // max: (84 * 85 + 84) * 85 = 614,040
+                chunk += ((in_rover < in_length) ? (inp[in_rover++] - base_char) : 84u);
+                chunk *= 85u; // max: (((84 * 85 + 84) * 85) + 84) * 85 = 52,200,540
+                chunk += ((in_rover < in_length) ? (inp[in_rover++] - base_char) : 84u);
+                // max: (((((84 * 85 + 84) * 85) + 84) * 85) + 84) * 85 = 4,437,053,040 oops! 0x108780E70
+                if (chunk > (UINT32_MAX / 85u))
+                {
+                    // multiply would overflow
+                    out_length = (int32_t )ascii85_err_decode_overflow; // bad input
+                    break; // leave while loop early to report error
+                }
+                else
+                {
+                    uint8_t addend = (uint8_t )((in_rover < in_length) ? (inp[in_rover++] - base_char) : 84u);
+
+                    chunk *= 85u; // multiply will not overflow due to test above
+
+                    if (chunk > (UINT32_MAX - addend))
+                    {
+                        /// add would overflow
+                        out_length = (int32_t )ascii85_err_decode_overflow; // bad input
+                        break; // leave while loop early to report error
+                    }
+                    else
+                    {
+                        chunk += addend;
+                    }
+                }
+            }
+
+            outp[out_length + 3] = (chunk % 256u);
+            chunk /= 256u;
+            outp[out_length + 2] = (chunk % 256u);
+            chunk /= 256u;
+            outp[out_length + 1] = (chunk % 256u);
+            chunk /= 256u;
+            outp[out_length    ] = (uint8_t )chunk;
+            // we don't need (chunk % 256u) on the last line since ((((2^32 - 1) / 256u) / 256u) / 256u) = 255
+
+            if (chunk_len >= 5)
+            {
+                out_length += 4;
+            }
+            else
+            {
+                out_length += (chunk_len - 1); // see note above re: Ascii85 length
+            }
+        }
+    }
+
+    return out_length;
+}
+
+/*!
+ * @brief ascii85_get_max_encoded_length: get the maximum length a block of data will encode to
+ * @param[in] in_length the number of data bytes to encode
+ * @return maximum number of bytes the encoded buffer could be if non-negative; error code from
+ * ascii85_errs_e if negative
+ * @par Possible errors include: ascii85_err_in_buf_too_large
+ */
+int32_t ascii85_get_max_encoded_length (int32_t in_length)
+{
+    int32_t out_length;
+
+    if ((in_length < 0) || (in_length > ascii85_in_length_max))
+    {
+        out_length = (int32_t )ascii85_err_in_buf_too_large;
+    }
+    else
+    {
+        // (in_length + 3) will not overflow since ascii85_in_length_max
+        // is < (INT32_MAX - 3), and similar reasoning for the final * 5
+        out_length = ((in_length + 3) / 4) * 5; // ceiling
+    }
+
+    return out_length;
+}
+
+/*!
+ * @brief ascii85_get_max_encoded_length: get the maximum length a block of data will decode to
+ * @param[in] in_length the number of encoded bytes to decode
+ * @return maximum number of bytes the decoded buffer could be if non-negative; error code from
+ * ascii85_errs_e if negative
+ * @par Possible errors include: ascii85_err_in_buf_too_large
+ */
+int32_t ascii85_get_max_decoded_length (int32_t in_length)
+{
+    int32_t out_length;
+
+    if ((in_length < 0) || (in_length > ascii85_in_length_max))
+    {
+        out_length = (int32_t )ascii85_err_in_buf_too_large;
+    }
+    else if (/*lint -e{506} -e{774}*/ascii85_decode_z_for_zero)
+    {
+        out_length = in_length * 4;
+    }
+    else
+    {
+        // (in_length + 4) will not overflow since ascii85_in_length_max
+        // is < (INT32_MAX - 4)
+        out_length = ((in_length + 4) / 5) * 4; // ceiling
+    }
+
+    return out_length;
 }
