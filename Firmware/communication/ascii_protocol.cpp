@@ -141,13 +141,13 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
 
 void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
 
-    if( pStr[0] == 'a' && pStr[5] == 't' ) {
+    if( pStr[0] == 'a' ) {
 
         odrv.n_evt_ascii_++;    // counter for debugging
 
         /* Get float setpoint */
-        float32_t torque_setpoint;
-        memcpy(&torque_setpoint, pStr+1, sizeof(float32_t));
+        float32_t torque_setpoint = 0.0;
+        decode_ascii85((uint8_t*) pStr+1, float_enc_size, (uint8_t*) &torque_setpoint, float_dec_size);
         Axis& axis = axes[0];
 
         /* Set torque */
