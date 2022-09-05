@@ -512,7 +512,7 @@ void AsciiProtocol::on_read_finished(ReadResult result) {
 
     for (;;) {
         uint8_t* end_of_line = std::find_if(rx_buf_, result.end, [](uint8_t c) {
-            return c == '\r' || c == '\n' || c == '!';
+            return c == '\r' || c == '\n' ;
         });
 
         if (end_of_line >= result.end) {
