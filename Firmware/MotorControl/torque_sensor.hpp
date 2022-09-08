@@ -21,11 +21,14 @@ public:
         float K_gain = K_VtoX * K_XtoM;  // [Nm/V]
 
         // Control loop gains
-        float k_p = 10.0f;               // Proportional gain
+        float k_p = 1.0f;                // Proportional gain
         float k_i = 0.0f;                // Integral gain 
 
         TorqueSensor* parent = nullptr; // parent (init to none)
 
+        // Custom setters
+        void settorquesensor_gpio_pin(uint16_t value) { torquesensor_gpio_pin = value; };
+        void set_Kgain(float32_t value) { K_gain = value; };
     };
 
     TorqueSensor(Stm32Gpio adc_gpio);

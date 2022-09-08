@@ -1181,6 +1181,43 @@ interfaces:
           }
       start_anticogging_calibration:
 
+ODrive.Encoder:
+    c_is_class: True
+    attributes:
+      error:
+        nullflag: NONE
+        flags:
+          UNSTABLE_GAIN:
+      is_ready: readonly bool
+      torque_nm_estimate: 
+        type: readonly float32
+        unit: Nm
+        doc: Torque estimate [Nm]
+      torque_voltage_meas: 
+        type: readonly float32
+        unit: Volt
+        doc: Reading from the ADC [voltage]
+      torque_dx_estimate: 
+        type: readonly float32
+        unit: m
+        doc: Displacement estimate [m]
+      torque_estimate: 
+        type: readonly float32
+        c_getter: torque_estimate_.any().value_or(0.0f)
+        unit: Nm
+        doc: Torque estimate from the potentiometer. 
+      config:
+        c_is_class: False
+        attributes:
+          torquesensor_gpio_pin: 
+            type: uint16
+            c_setter: set_torquesensor_gpio_pin
+            doc: Make sure that the GPIO is in `GPIO_MODE_ANALOG`.
+          K_gain: 
+            type: float32
+            c_setter: set_Kgain
+            unit: Nm/V
+
 
   ODrive.Encoder:
     c_is_class: True
