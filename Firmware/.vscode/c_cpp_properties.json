@@ -39,11 +39,11 @@
         {
             "name": "ODrive 3.6 Linux",
             "includePath": [
-                "${workspaceFolder}/Firmware/**",
-                "${workspaceFolder}/Firmware/ThirdParty/FreeRTOS/Source/portable/GCC/ARM_CM4F",
-                "${workspaceFolder}/Firmware/fibre-cpp/include"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/ThirdParty/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+                "${workspaceFolder}/fibre-cpp/include"
             ],
-            "compilerPath": "arm-none-eabi-g++",
+            "compilerPath": "/usr/bin/arm-none-eabi-g++",
             "intelliSenseMode": "gcc-arm",
             "defines": [
                 "__arm__",
