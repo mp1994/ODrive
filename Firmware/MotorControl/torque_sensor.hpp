@@ -13,7 +13,7 @@ class TorqueSensor {       // Da capire cosa mettere qui al posto di ODriveIntf:
 public:
     struct Config_t {
 
-        uint16_t torquesensor_gpio_pin = 0xFF;  // GPIO pin for ADC readout of torque sensor
+        uint16_t torquesensor_gpio_pin = 3;  // GPIO pin for ADC readout of torque sensor
         
         // Sensor gains
         float K_VtoX = 1.0f;             // Voltage to Displacement gain [m/V]
