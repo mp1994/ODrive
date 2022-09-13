@@ -78,6 +78,8 @@ if os.name == 'nt':
     os.environ['PATH'] = dll_dir + os.pathsep + os.environ['PATH']
   lib = windll.LoadLibrary(lib_path)
 else:
+  lib_path = "/usr/local/lib/libfibre-linux-amd64.so"
+  print("--------- {}".format(lib_path))
   lib = cdll.LoadLibrary(lib_path)
 
 # libfibre definitions --------------------------------------------------------#

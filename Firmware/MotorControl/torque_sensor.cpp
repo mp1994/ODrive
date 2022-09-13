@@ -14,6 +14,7 @@ TorqueSensor::TorqueSensor(uint16_t gpio_num) :
 {
     if( gpio_num > 0 && gpio_num < 9 ) {
         enabled_ = true;
+        
     }
 }
 
@@ -30,6 +31,8 @@ void TorqueSensor::setup() {
     adc_gpio_ = get_gpio(config_.torquesensor_gpio_pin); // FIX this: why do we need Stm32Gpio as input if we set it here from torquesensor_gpio_pin ?
     adc_gpio_.config(GPIO_MODE_INPUT, GPIO_MODE_ANALOG); 
 
+    is_ready_ = true;
+
     // adc_gpio.subscribe() > set an ISR for the pin > do we need it? 
     // probably not...
 
@@ -44,7 +47,9 @@ void TorqueSensor::set_error(void) {
 // }
 
 // We probably need to implement this in a smarter way...
+// This is pointless now...
 bool TorqueSensor::do_checks() {
+    is_ready_ = enabled_;
     return enabled_;
 }
 
@@ -77,7 +82,7 @@ void TorqueSensor::sample_now() {
 bool TorqueSensor::update() {
 
     // Update measured displacement
-    torque_dx_estimate_ = config_.K_VtoX * torque_voltage_meas_;
+    torque_dx_estimate_ = config_.K_VtoX * (torque_voltage_meas_ - 1.65f);
     // Update measured torque
     torque_nm_estimate_ = config_.K_XtoM * torque_dx_estimate_;
 
@@ -85,7 +90,7 @@ bool TorqueSensor::update() {
     // TODO
 
     // Output from TorqueSensor to Controller
-    torque_estimate_ = torque_nm_estimate_;
+    torque_estimate_ = config_.K_gain * torque_voltage_meas_;
 
     return enabled_;
 

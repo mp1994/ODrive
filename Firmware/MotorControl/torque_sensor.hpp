@@ -50,7 +50,6 @@ public:
     bool enabled_ = false;
     Config_t config_;
 
-    // Error error_ = ERROR_NONE;
     bool is_ready_ = false;
 
     // TorqueSensor variables
@@ -58,7 +57,7 @@ public:
     float torque_voltage_meas_ = 0.0f;    // ADC reading [V]
     float torque_dx_estimate_  = 0.0f;    // Displacement [m]
     
-    float error_ = 0.0f;        // Torque error [Nm]
+    float torque_error_ = 0.0f;        // Torque error [Nm]
     float prev_error_ = 0.0f;   // Previous torque error [Nm]
 
     // Outputs --> read from Axis and Controller

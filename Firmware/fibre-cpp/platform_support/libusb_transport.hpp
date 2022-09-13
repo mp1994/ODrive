@@ -5,7 +5,7 @@
 #include <fibre/async_stream.hpp>
 #include <fibre/channel_discoverer.hpp>
 
-#include <libusb.h>
+#include <libusb-1.0/libusb.h>
 #include <thread>
 #include <vector>
 #include <unordered_map>

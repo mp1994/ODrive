@@ -236,14 +236,16 @@ bool Controller::update() {
             float e = 0.0f;
 
             // Get sampled torque estimate value from TorqueSensor
-            std::optional<float> analog_torque_sensor = axis_->torque_sensor_.torque_estimate_.present();
-            if( !analog_torque_sensor.has_value() ) {
+            std::optional<float> sea_torque_est = axis_->torque_sensor_.torque_estimate_.present();
+            if( !sea_torque_est.has_value() ) {
                 set_error(ERROR_INVALID_ESTIMATE);
                 return false;
             }
 
             // Update error = torque command (from USB) - torque measurement
-            e = input_torque_ - *analog_torque_sensor;
+            e = input_torque_ - *sea_torque_est;
+            // Update error on the axis variable (just for reference/external access)
+            axis_->torque_sensor_.torque_error_ = e;
 
             // torque setpoint = torque gain * error (TODO: add integral term)
             torque_setpoint_ = axis_->torque_sensor_.config_.k_p * e; // + axis_->torque_sensor_.config_.k_i * e_i
