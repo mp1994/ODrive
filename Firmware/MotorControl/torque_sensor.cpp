@@ -90,7 +90,7 @@ bool TorqueSensor::update() {
     // TODO
 
     // Output from TorqueSensor to Controller
-    torque_estimate_ = config_.K_gain * torque_voltage_meas_;
+    torque_estimate_ = config_.K_gain * (torque_voltage_meas_ - 1.65f);
 
     return enabled_;
 
