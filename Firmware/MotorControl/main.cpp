@@ -462,6 +462,7 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
             axis.motor_.current_control_.update(timestamp); // uses the output of controller_ or open_loop_contoller_ and encoder_ or sensorless_estimator_ or acim_estimator_
     }
 
+
     // Tell the axis threads that the control loop has finished
     for (auto& axis: axes) {
         if (axis.thread_id_) {
@@ -527,6 +528,7 @@ static void rtos_main(void*) {
     // Init USB device
     MX_USB_DEVICE_Init();
 
+    osDelay(100);
 
     // Start ADC for temperature measurements and user measurements
     start_general_purpose_adc();
@@ -535,9 +537,13 @@ static void rtos_main(void*) {
     // Init communications (this requires the axis objects to be constructed)
     init_communication();
 
+    osDelay(100);
+
     // Start pwm-in compare modules
     // must happen after communication is initialized
     pwm0_input.init();
+
+    osDelay(500);
 
     // Set up the CS pins for absolute encoders (TODO: move to GPIO init switch statement)
     for(auto& axis : axes){
@@ -560,6 +566,8 @@ static void rtos_main(void*) {
     for(auto& axis: axes){
         axis.acim_estimator_.idq_src_.connect_to(&axis.motor_.Idq_setpoint_);
     }
+
+    osDelay(100);
 
     // Start PWM and enable adc interrupts/callbacks
     start_adc_pwm();

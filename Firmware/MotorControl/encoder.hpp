@@ -115,6 +115,14 @@ public:
     OutputPort<float> vel_estimate_ = 0.0f; // [turn/s]
     OutputPort<float> pos_circular_ = 0.0f; // [turn]
 
+    float* pos_buf_ = (float*) malloc(8*sizeof(float));
+    volatile uint32_t pos_buf_count_ = 0;
+    volatile float pos_filt_ = 0.0f;
+
+    float* vel_buf_ = (float*) malloc(8*sizeof(float));
+    volatile uint32_t vel_buf_count_ = 0;
+    volatile float vel_filt_ = 0.0f;
+
     bool pos_estimate_valid_ = false;
     bool vel_estimate_valid_ = false;
 

@@ -9,6 +9,7 @@
 #include <communication/interface_i2c.h>
 #include <communication/interface_uart.h>
 #include <task_timer.hpp>
+
 extern "C" {
 #endif
 
@@ -246,6 +247,7 @@ public:
     bool task_timers_armed_ = false;
     TaskTimes task_times_;
     const bool otp_valid_ = ((uint8_t*)FLASH_OTP_BASE)[0] != 0xff;
+
 };
 
 extern ODrive odrv; // defined in main.cpp

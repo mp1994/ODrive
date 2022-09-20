@@ -109,6 +109,8 @@ bool Controller::update() {
     std::optional<float> anticogging_pos_estimate = axis_->encoder_.pos_estimate_.present();
     std::optional<float> anticogging_vel_estimate = axis_->encoder_.vel_estimate_.present();
 
+    trt_reading_ = get_adc_voltage(get_gpio(3));
+
     if (axis_->step_dir_active_) {
         if (!pos_wrap.has_value()) {
             set_error(ERROR_INVALID_CIRCULAR_RANGE);

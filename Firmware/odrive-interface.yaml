@@ -120,6 +120,7 @@ interfaces:
       # Diagnostics & performance monitoring
       n_evt_sampling: {type: readonly uint32, doc: Number of input sampling events since startup (modulo 2^32)}
       n_evt_control_loop: {type: readonly uint32, doc: Number of control loop iterations since startup (modulo 2^32)}
+      n_evt_ascii: {type: readonly uint32, doc: Number of ASCII rx events (modulo 2^32)}
       task_timers_armed:
         type: bool
         doc: |
@@ -822,7 +823,7 @@ interfaces:
           final_v_beta: readonly float32
       n_evt_current_measurement: {type: readonly uint32, doc: Number of current measurement events since startup (modulo 2^32)}
       n_evt_pwm_update: {type: readonly uint32, doc: Number of PWM update events since startup (modulo 2^32)}
-
+      
       config:
         c_is_class: False
         attributes:

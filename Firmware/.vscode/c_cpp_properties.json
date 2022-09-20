@@ -41,7 +41,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/ThirdParty/FreeRTOS/Source/portable/GCC/ARM_CM4F",
-                "${workspaceFolder}/fibre-cpp/include"
+                "${workspaceFolder}/fibre-cpp/include",
+                "${workspaceFolder}/ThirdParty/**"
             ],
             "compilerPath": "/usr/bin/arm-none-eabi-g++",
             "intelliSenseMode": "gcc-arm",
@@ -70,7 +71,8 @@
                 "-u _scanf_float"
             ],
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++17",
+            "configurationProvider": "ms-vscode.makefile-tools"
         },
         {
             "name": "ODrive 3.6 Mac",

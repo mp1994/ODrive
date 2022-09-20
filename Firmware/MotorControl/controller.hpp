@@ -96,6 +96,8 @@ public:
     InputPort<float> vel_estimate_src_;
     InputPort<float> pos_wrap_src_; 
 
+    float trt_reading_ = 0.0f;
+
     float pos_setpoint_ = 0.0f; // [turns]
     float vel_setpoint_ = 0.0f; // [turn/s]
     // float vel_setpoint = 800.0f; <sensorless example>
