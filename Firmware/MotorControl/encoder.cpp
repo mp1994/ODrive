@@ -799,6 +799,20 @@ bool Encoder::update() {
     pos_estimate_ = pos_estimate_counts_ / (float)config_.cpr;
     vel_estimate_ = vel_estimate_counts_ / (float)config_.cpr;
     
+    // Update pos and vel filter
+    pos_buf_[pos_buf_count_ % 8] = (float) pos_estimate_.any().value_or(0.0f);
+    pos_buf_count_++;
+    pos_filt_ = 0.0f;
+    vel_buf_[vel_buf_count_ % 8] = (float) vel_estimate_.any().value_or(0.0f);
+    vel_buf_count_++;
+    vel_filt_ = 0.0f;
+    for( size_t i = 0; i < 8; i++ ) {
+        pos_filt_ += pos_buf_[i];
+        vel_filt_ += vel_buf_[i];
+    }
+    pos_filt_ = pos_filt_ / 8.0f;
+    vel_filt_ = vel_filt_ / 8.0f;
+
     // TODO: we should strictly require that this value is from the previous iteration
     // to avoid spinout scenarios. However that requires a proper way to reset
     // the encoder from error states.
