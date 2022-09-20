@@ -452,6 +452,12 @@ void ODrive::control_loop_cb(uint32_t timestamp) {
             axis.motor_.current_control_.update(timestamp); // uses the output of controller_ or open_loop_contoller_ and encoder_ or sensorless_estimator_ or acim_estimator_
     }
 
+    // for(auto& axis: axes) {
+    //     axis.pos_buf_.push(axis.encoder_.pos_estimate_.any().value_or(0.0f));
+    // }
+    Axis& axis = axes[0];
+    axis.pos_buf_.push(axis.encoder_.pos_estimate_.any().value_or(0.0f));
+
     // Tell the axis threads that the control loop has finished
     for (auto& axis: axes) {
         if (axis.thread_id_) {

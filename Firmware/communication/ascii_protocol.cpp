@@ -154,11 +154,13 @@ void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
         axis.controller_.input_torque_ = torque_setpoint;
         axis.watchdog_feed();
 
-        /* Pack feedback data */
-        uint32_t n_cb = odrv.n_evt_control_loop_;
+        /* Filter the feedback data */
         float32_t data[4];
-        data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
-        data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
+        data[0] = axis.pos_buf_.mean();
+
+        /* Pack feedback data */
+        uint32_t n_cb = axis.pos_buf_._count;
+        data[1] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f); // compare pos_estimate with data[0] (filtered pos)
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
         data[3] = (float32_t) axis.controller_.trt_reading_;
 
