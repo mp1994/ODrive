@@ -802,17 +802,20 @@ bool Encoder::update() {
     // Update pos and vel filter
     pos_buf_[pos_buf_count_ % 8] = (float) pos_estimate_.any().value_or(0.0f);
     pos_buf_count_++;
-    pos_filt_ = 0.0f;
     vel_buf_[vel_buf_count_ % 8] = (float) vel_estimate_.any().value_or(0.0f);
     vel_buf_count_++;
-    vel_filt_ = 0.0f;
-    for( size_t i = 0; i < 8; i++ ) {
-        pos_filt_ += pos_buf_[i];
-        vel_filt_ += vel_buf_[i];
+    // Compute the average only when the buffer is filled with values
+    if( pos_buf_count_ % 8 == 0 ) {
+        pos_filt_ = 0.0f;
+        vel_filt_ = 0.0f;
+        for( size_t i = 0; i < 8; i++ ) {
+            pos_filt_ += pos_buf_[i];
+            vel_filt_ += vel_buf_[i];
+        }
+        pos_filt_ = pos_filt_ / 8.0f;
+        vel_filt_ = vel_filt_ / 8.0f;
     }
-    pos_filt_ = pos_filt_ / 8.0f;
-    vel_filt_ = vel_filt_ / 8.0f;
-
+    
     // TODO: we should strictly require that this value is from the previous iteration
     // to avoid spinout scenarios. However that requires a proper way to reset
     // the encoder from error states.

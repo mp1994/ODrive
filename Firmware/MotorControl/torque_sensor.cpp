@@ -92,11 +92,14 @@ bool TorqueSensor::update() {
     // Torque filtering
     sea_buf_[sea_buf_count_ % 8] = (float) torque_estimate_.any().value_or(0.0f);
     sea_buf_count_++;
-    sea_filt_ = 0.0f;
-    for( size_t i = 0; i < 8; i++ ) {
-        sea_filt_ += sea_buf_[i];
+    // Compute the average only when the buffer is filled with values
+    if( sea_buf_count_ % 8 == 0 ) {
+        sea_filt_ = 0.0f;
+            for( size_t i = 0; i < 8; i++ ) {
+            sea_filt_ += sea_buf_[i];
+        }
+        sea_filt_ = sea_filt_ / 8.0f;
     }
-    sea_filt_ = sea_filt_ / 8.0f;
 
     return enabled_;
 
