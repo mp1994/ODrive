@@ -57,8 +57,12 @@ public:
     float torque_voltage_meas_ = 0.0f;    // ADC reading [V]
     float torque_dx_estimate_  = 0.0f;    // Displacement [m]
     
-    float torque_error_ = 0.0f;        // Torque error [Nm]
+    float torque_error_ = 0.0f;        // Torque error   [Nm]
     float prev_error_ = 0.0f;   // Previous torque error [Nm]
+
+    float* sea_buf_ = (float*) malloc(8*sizeof(float));
+    volatile uint32_t sea_buf_count_ = 0;
+    volatile float sea_filt_ = 0.0f;
 
     // Outputs --> read from Axis and Controller
     OutputPort<float> torque_estimate_ = 0.0f;

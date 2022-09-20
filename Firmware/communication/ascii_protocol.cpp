@@ -157,10 +157,10 @@ void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
         /* Pack feedback data */
         uint32_t n_cb = odrv.n_evt_control_loop_;
         float32_t data[4];
-        data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
-        data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
+        data[0] = (float32_t) axis.encoder_.pos_filt_;
+        data[1] = (float32_t) axis.encoder_.vel_filt_;
         data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
-        data[3] = (float32_t) axis.torque_sensor_.torque_estimate_.any().value_or(0.0f);
+        data[3] = (float32_t) axis.torque_sensor_.sea_filt_;
 
         /* Encode feedback data */
         size_t enc_size = 0;
