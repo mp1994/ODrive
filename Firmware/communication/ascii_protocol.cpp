@@ -121,7 +121,8 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
     switch(cmd[0]) {
         case 'a': cmd_set_torque_get_feedback_0(cmd);                 break;  // custom: torque command + feedback (pos vel Iq)
         case 'b': cmd_set_torque_get_feedback_1(cmd);                 break;
-
+        case 'x': cmd_set_vel_get_feedback_0(cmd);                    break;
+        case 'y': cmd_set_vel_get_feedback_1(cmd);                    break;
         case 'p': cmd_set_position(cmd, use_checksum);                break;  // position control
         case 'q': cmd_set_position_wl(cmd, use_checksum);             break;  // position control with limits
         case 'v': cmd_set_velocity(cmd, use_checksum);                break;  // velocity control
@@ -182,6 +183,49 @@ void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
 
 }
 
+void AsciiProtocol::cmd_set_vel_get_feedback_0(char* pStr) {
+
+    if( pStr[0] == 'c' ) {
+
+        odrv.n_evt_ascii_++;    // counter for debugging
+
+        /* Get setpoint */
+        float32_t vel_setpoint = 0.0;
+        decode_ascii85((uint8_t*) pStr+1, float_enc_size, (uint8_t*) &vel_setpoint, float_dec_size);
+        Axis& axis = axes[0];
+
+        /* Set vel */
+        axis.controller_.input_vel_ = vel_setpoint;
+        axis.watchdog_feed();
+
+        /* Pack feedback data */
+        uint32_t n_cb = odrv.n_evt_control_loop_;
+        float32_t data[4];
+        data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
+        data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
+        data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
+        data[3] = (float32_t) axis.controller_.trt_reading_;
+
+        /* Encode feedback data */
+        size_t enc_size = 0;
+        enc_size += encode_ascii85((const uint8_t*) &n_cb, sizeof(uint32_t), &tx_buf_[0], 512);
+        if( enc_size < 0 ) respond(false, "0 invalid uint32_t encoding");
+        enc_size += encode_ascii85((const uint8_t*) data, 4*sizeof(float), &tx_buf_[enc_size], 512);
+        if( enc_size < 0 ) respond(false, "0 invalid float encoding");
+
+        tx_buf_[enc_size] = 0x0A; // terminator ('\n')
+
+        /* Write over USB */
+        sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be 26 bytes
+        sink_.maybe_start_async_write();
+
+    }
+    else {
+        respond(false, "0 invalid vel command ");
+    }
+
+}
+
 void AsciiProtocol::cmd_set_torque_get_feedback_1(char* pStr) {
 
    if( pStr[0] == 'b' ) {
@@ -221,6 +265,49 @@ void AsciiProtocol::cmd_set_torque_get_feedback_1(char* pStr) {
     }
     else {
         respond(false, "1 invalid command ");
+    }
+
+}
+
+void AsciiProtocol::cmd_set_vel_get_feedback_1(char* pStr) {
+
+    if( pStr[0] == 'd' ) {
+
+        odrv.n_evt_ascii_++;    // counter for debugging
+
+        /* Get setpoint */
+        float32_t vel_setpoint = 0.0;
+        decode_ascii85((uint8_t*) pStr+1, float_enc_size, (uint8_t*) &vel_setpoint, float_dec_size);
+        Axis& axis = axes[1];
+
+        /* Set vel */
+        axis.controller_.input_vel_ = vel_setpoint;
+        axis.watchdog_feed();
+
+        /* Pack feedback data */
+        uint32_t n_cb = odrv.n_evt_control_loop_;
+        float32_t data[4];
+        data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
+        data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
+        data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
+        data[3] = (float32_t) axis.controller_.trt_reading_;
+
+        /* Encode feedback data */
+        size_t enc_size = 0;
+        enc_size += encode_ascii85((const uint8_t*) &n_cb, sizeof(uint32_t), &tx_buf_[0], 512);
+        if( enc_size < 0 ) respond(false, "0 invalid uint32_t encoding");
+        enc_size += encode_ascii85((const uint8_t*) data, 4*sizeof(float), &tx_buf_[enc_size], 512);
+        if( enc_size < 0 ) respond(false, "0 invalid float encoding");
+
+        tx_buf_[enc_size] = 0x0A; // terminator ('\n')
+
+        /* Write over USB */
+        sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be 26 bytes
+        sink_.maybe_start_async_write();
+
+    }
+    else {
+        respond(false, "0 invalid vel command ");
     }
 
 }

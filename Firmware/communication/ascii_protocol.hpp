@@ -16,6 +16,8 @@ public:
 private:
     void cmd_set_torque_get_feedback_0(char * pStr);
     void cmd_set_torque_get_feedback_1(char * pStr);
+    void cmd_set_vel_get_feedback_0(char * pStr);
+    void cmd_set_vel_get_feedback_1(char * pStr);
     void cmd_set_position(char * pStr, bool use_checksum);
     void cmd_set_position_wl(char * pStr, bool use_checksum);
     void cmd_set_velocity(char * pStr, bool use_checksum);
