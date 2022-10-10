@@ -16,9 +16,9 @@ public:
         uint16_t torquesensor_gpio_pin = 3;  // GPIO pin for ADC readout of torque sensor
         
         // Sensor gains
-        float K_VtoX = 1.0f;             // Voltage to Displacement gain [m/V]
-        float K_XtoM = 1.0f;             // Displacement to Torque gain [Nm/m]
-        float K_gain = 0.12f;            // [Nm/V]
+        float K_VtoX = 1.0f;              // Voltage to Displacement gain [m/V]
+        float K_XtoM = 1.0f;              // Displacement to Torque gain [Nm/m]
+        float K_gain = -0.12f;            // [Nm/V]
 
         uint8_t N_spring_pairs = 3;      // Number of spring pairs
 

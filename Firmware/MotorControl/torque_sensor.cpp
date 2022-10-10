@@ -88,16 +88,16 @@ bool TorqueSensor::update() {
 
     // Output from TorqueSensor to the Controller
     torque_estimate_ = (config_.K_gain * (torque_voltage_meas_ - 1.65f)) - config_.torque_offset;
-    
+
     // Torque filtering
     sea_buf_[sea_buf_count_ % 8] = (float) torque_estimate_.any().value_or(0.0f);
     sea_buf_count_++;
     // Compute the average only when the buffer is filled with values
     if( sea_buf_count_ % 8 == 0 ) {
         sea_filt_ = 0.0f;
-            for( size_t i = 0; i < 8; i++ ) {
+        for( size_t i = 0; i < 8; i++ ) {
             sea_filt_ += sea_buf_[i];
-        }
+        }   
         sea_filt_ = sea_filt_ / 8.0f;
     }
 
