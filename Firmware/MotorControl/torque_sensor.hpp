@@ -18,17 +18,25 @@ public:
         // Sensor gains
         float K_VtoX = 1.0f;             // Voltage to Displacement gain [m/V]
         float K_XtoM = 1.0f;             // Displacement to Torque gain [Nm/m]
-        float K_gain = K_VtoX * K_XtoM;  // [Nm/V]
+        float K_gain = 0.12f;            // [Nm/V]
+
+        uint8_t N_spring_pairs = 3;      // Number of spring pairs
+
+        float torque_offset = 0.0f;      // Zero offset of the SEA [Nm]
 
         // Control loop gains
         float k_p = 1.0f;                // Proportional gain
         float k_i = 0.0f;                // Integral gain 
 
-        TorqueSensor* parent = nullptr; // parent (init to none)
+        TorqueSensor* parent = nullptr;  // parent (init to none)
 
         // Custom setters
         void settorquesensor_gpio_pin(uint16_t value) { torquesensor_gpio_pin = value; };
         void set_Kgain(float32_t value) { K_gain = value; };
+        void set_Pgain(float32_t value) { k_p = value; };
+        void set_Nsprings(uint8_t value) { N_spring_pairs = value; K_gain *= float(value)/3.0f; };
+        void set_TorqueOffset(float32_t value) { torque_offset = value; };
+
     };
 
     TorqueSensor(Stm32Gpio adc_gpio);

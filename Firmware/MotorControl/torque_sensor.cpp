@@ -86,9 +86,9 @@ bool TorqueSensor::update() {
     // Update measured torque
     torque_nm_estimate_ = config_.K_XtoM * torque_dx_estimate_;
 
-    // Output from TorqueSensor to Controller
-    torque_estimate_ = config_.K_gain * (torque_voltage_meas_ - 1.65f);
-
+    // Output from TorqueSensor to the Controller
+    torque_estimate_ = (config_.K_gain * (torque_voltage_meas_ - 1.65f)) - config_.torque_offset;
+    
     // Torque filtering
     sea_buf_[sea_buf_count_ % 8] = (float) torque_estimate_.any().value_or(0.0f);
     sea_buf_count_++;

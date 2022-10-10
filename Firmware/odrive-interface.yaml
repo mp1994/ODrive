@@ -1215,6 +1215,19 @@ interfaces:
             type: float32
             c_setter: set_Kgain
             unit: Nm/V
+          k_p:
+            type: float32
+            c_setter: set_Pgain
+            unit: N/D
+          N_spring_pairs:
+            type: uint8
+            c_setter: set_Nsprings
+            doc: Number of spring pairs in the SEA
+          torque_offset:
+            type: float32
+            c_setter: set_TorqueOffset
+            unit: Nm
+          
 
 
   ODrive.Encoder:
