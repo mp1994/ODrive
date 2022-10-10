@@ -237,8 +237,8 @@ bool Controller::update() {
 
             float e = 0.0f;
 
-            // Get sampled torque estimate value from TorqueSensor
-            std::optional<float> sea_torque_est = axis_->torque_sensor_.torque_estimate_.present();
+            // Get sampled torque estimate value from TorqueSensor (filtered)
+            std::optional<float> sea_torque_est = axis_->torque_sensor_.torque_estimate_filt_.present();
             if( !sea_torque_est.has_value() ) {
                 set_error(ERROR_INVALID_ESTIMATE);
                 return false;

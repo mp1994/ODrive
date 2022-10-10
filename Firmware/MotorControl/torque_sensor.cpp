@@ -99,6 +99,7 @@ bool TorqueSensor::update() {
             sea_filt_ += sea_buf_[i];
         }   
         sea_filt_ = sea_filt_ / 8.0f;
+        torque_estimate_filt_ = sea_filt_;
     }
 
     return enabled_;

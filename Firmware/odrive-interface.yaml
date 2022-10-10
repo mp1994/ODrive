@@ -1204,6 +1204,14 @@ interfaces:
         c_getter: torque_estimate_.any().value_or(0.0f)
         unit: Nm
         doc: Torque estimate from the potentiometer. 
+      torque_estimate_filt:
+        type: readonly float32
+        c_getter: torque_estimate_filt_.any().value_or(0.0f)
+        unit: Nm
+        doc: Torque estimate from the potentiometer, filtered with a 8-sample average (reduced to 1 kHz update rate)
+      torque_error:
+        type: readonly float32
+        unit: Nm
       config:
         c_is_class: False
         attributes:

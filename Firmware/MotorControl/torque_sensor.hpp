@@ -74,6 +74,7 @@ public:
 
     // Outputs --> read from Axis and Controller
     OutputPort<float> torque_estimate_ = 0.0f;
+    OutputPort<float> torque_estimate_filt_ = 0.0f;
 
     bool torque_estimate_valid_ = false;
 
