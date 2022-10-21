@@ -122,6 +122,8 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
         case 'a': cmd_set_torque_get_feedback_0(cmd);                 break;  // custom: torque command + feedback (pos vel Iq)
         case 'b': cmd_set_torque_get_feedback_1(cmd);                 break;
 
+        case 'T': cmd_control_loop(cmd);                              break; // custom: dual-axis control loop
+
         case 'p': cmd_set_position(cmd, use_checksum);                break;  // position control
         case 'q': cmd_set_position_wl(cmd, use_checksum);             break;  // position control with limits
         case 'v': cmd_set_velocity(cmd, use_checksum);                break;  // velocity control
@@ -137,6 +139,47 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
         case 'e': cmd_encoder(cmd, use_checksum);                     break;  // Encoder commands
         default : cmd_unknown(nullptr, use_checksum);                 break;
     }
+}
+
+void AsciiProtocol::cmd_control_loop(char * pStr) {
+
+    // Counter for benchmarking
+    odrv.n_evt_ascii_++; 
+
+    // Array for feedback data
+    float32_t data[6];
+
+    /* Get torque setpoints */
+    float32_t torque_setpoint[2] = {0.0f};
+    decode_ascii85((uint8_t*) pStr+1, 2*float_enc_size, (uint8_t*) torque_setpoint, 2*float_dec_size);
+    
+    for( uint8_t i = 0; i < 2; i++ ) {
+
+        /* Set torque */
+        Axis& axis = axes[i];
+        axis.controller_.input_torque_ = torque_setpoint[i];
+        axis.watchdog_feed();
+
+        /* Pack feedback data */
+        data[0 + 3*i] = (float32_t) axis.encoder_.pos_filt_;
+        data[1 + 3*i] = (float32_t) axis.encoder_.vel_filt_;
+        data[2 + 3*i] = 0.5f*(float(i));
+
+    }
+
+    uint32_t n_cb = odrv.n_evt_control_loop_;
+
+    /* Encode feedback data */
+    size_t enc_size = 0;
+    enc_size += encode_ascii85((const uint8_t*) &n_cb, sizeof(uint32_t), &tx_buf_[0],        512);
+    enc_size += encode_ascii85((const uint8_t*) data,  6*sizeof(float),  &tx_buf_[enc_size], 512);
+
+    tx_buf_[enc_size] = 0x0A; // terminator ('\n')
+
+    /* Write over USB */
+    sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be 36 bytes
+    sink_.maybe_start_async_write();
+
 }
 
 void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {

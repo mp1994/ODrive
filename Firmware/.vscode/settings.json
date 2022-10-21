@@ -31,7 +31,8 @@
         "tuple": "cpp",
         "type_traits": "cpp",
         "typeinfo": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "optional": "cpp"
     },
     "cSpell.enabled": false
 }
