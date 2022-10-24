@@ -149,6 +149,10 @@ void AsciiProtocol::cmd_control_loop(char * pStr) {
     // Array for feedback data
     float32_t data[6];
 
+    // Error feedback
+    uint32_t error_status = 0u;
+    error_status |= odrv.error_;
+
     /* Get torque setpoints */
     float32_t torque_setpoint[2] = {0.0f};
     decode_ascii85((uint8_t*) pStr+1, 2*float_enc_size, (uint8_t*) torque_setpoint, 2*float_dec_size);
@@ -163,7 +167,10 @@ void AsciiProtocol::cmd_control_loop(char * pStr) {
         /* Pack feedback data */
         data[0 + 3*i] = (float32_t) axis.encoder_.pos_filt_;
         data[1 + 3*i] = (float32_t) axis.encoder_.vel_filt_;
-        data[2 + 3*i] = 0.5f*(float(i));
+        // TODO replace this with the real deal
+        data[2 + 3*i] = 0.5f*(float(i)); 
+
+        error_status |= (axis.controller_.error_ << 8*(i+1));
 
     }
 
@@ -174,10 +181,18 @@ void AsciiProtocol::cmd_control_loop(char * pStr) {
     enc_size += encode_ascii85((const uint8_t*) &n_cb, sizeof(uint32_t), &tx_buf_[0],        512);
     enc_size += encode_ascii85((const uint8_t*) data,  6*sizeof(float),  &tx_buf_[enc_size], 512);
 
+    // 100 Hz
+    if( n_cb % 80 == 0 ) {
+        enc_size += encode_ascii85((const uint8_t*) &error_status, sizeof(uint32_t), &tx_buf_[enc_size], 512);
+    }
+    if( n_cb % 8000 == 0 ) {
+        enc_size += encode_ascii85((const uint8_t*) &odrv.vbus_voltage_, sizeof(float), &tx_buf_[enc_size], 512);
+    }
+
     tx_buf_[enc_size] = 0x0A; // terminator ('\n')
 
     /* Write over USB */
-    sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be 36 bytes
+    sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be either 36 or 41 or 46 bytes
     sink_.maybe_start_async_write();
 
 }
