@@ -170,7 +170,19 @@ void AsciiProtocol::cmd_control_loop(char * pStr) {
         // TODO replace this with the real deal
         data[2 + 3*i] = 0.5f*(float(i)); 
 
-        error_status |= (axis.controller_.error_ << 8*(i+1));
+        /* Error checking */
+        if( axis.error_ != 0u ) {
+            error_status |= (2*(i+1) << 8);    
+        }
+        if( axis.motor_.error_ != 0u ) {
+            error_status |= (6*(i+1) << 8);
+        }
+        if( axis.controller_.error_ != 0u ) {
+            error_status |= (8*(i+1) << 8);
+        }
+        if( axis.encoder_.error_ != 0u ) {
+            error_status |= (10*(i+1) << 8);
+        }
 
     }
 
