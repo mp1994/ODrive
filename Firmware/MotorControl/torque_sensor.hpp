@@ -36,8 +36,10 @@ public:
         void set_gpio_pin(uint16_t value) { gpio_pin = value; };
         void set_Kgain(float32_t value) { K_gain = value; };
         void set_Pgain(float32_t value) { k_p = value; };
+        void set_Igain(float32_t value) { k_i = value; };
         void set_Nsprings(uint8_t value) { N_spring_pairs = value; K_gain *= float(value)/3.0f; };
         void set_TorqueOffset(float32_t value) { torque_offset = value; };
+        void enable_sea(bool value) { enable = value;}
 
     };
 
@@ -67,8 +69,9 @@ public:
     float torque_voltage_meas_ = 0.0f;    // ADC reading [V]
     float torque_dx_estimate_  = 0.0f;    // Displacement [m]
     
-    float torque_error_ = 0.0f;        // Torque error   [Nm]
-    float prev_error_ = 0.0f;   // Previous torque error [Nm]
+    float torque_error_ = 0.0f;             // Torque error   [Nm]
+    float torque_error_integral = 0.0f;     // Integral torque error
+    float prev_error_ = 0.0f;               // Previous torque error [Nm]
 
     float* sea_buf_ = (float*) malloc(8*sizeof(float));
     volatile uint32_t sea_buf_count_ = 0;

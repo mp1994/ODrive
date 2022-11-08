@@ -2,6 +2,10 @@
 #include "odrive_main.h"
 #include <algorithm>
 
+// Master control period used to compute the integral error of the torque
+// WARNING this is hard coded
+const float controller_dt = 0.001f;
+
 bool Controller::apply_config() {
     config_.parent = this;
     update_filter_gains();
@@ -235,23 +239,33 @@ bool Controller::update() {
         } break;
         case INPUT_MODE_INTERNAL_TORQUE_FEEDBACK: {
 
-            float e = 0.0f;
-
-            // Get sampled torque estimate value from TorqueSensor (filtered)
-            std::optional<float> sea_torque_est = axis_->torque_sensor_.torque_estimate_filt_.present();
-            if( !sea_torque_est.has_value() ) {
-                set_error(ERROR_INVALID_ESTIMATE);
-                return false;
+            // If not enabled, pass-through the input torque as the new set-point
+            if( !axis_->torque_sensor_.config_.enable ) {
+                torque_setpoint_ = input_torque_;
             }
+            // Otherwise close the loop on the measured torque
+            else {
 
-            // Update error = torque command (from USB) - torque measurement
-            e = input_torque_ - *sea_torque_est;
-            // Update error on the axis variable (just for reference/external access)
-            axis_->torque_sensor_.torque_error_ = e;
+                // Get the filtered measured torque from the TorqueSensor
+                std::optional<float> measured_torque = axis_->torque_sensor_.torque_estimate_filt_.present();
+                if( !measured_torque.has_value() ) {
+                    set_error(ERROR_INVALID_ESTIMATE);
+                    return false;
+                }
 
-            // torque setpoint = torque gain * error (TODO: add integral term)
-            // TODO this gain (k_p) should be tuned
-            torque_setpoint_ = axis_->torque_sensor_.config_.k_p * e; // + axis_->torque_sensor_.config_.k_i * e_i
+                // Update the error = input torque command (from ODrive-Master) - measured torque
+                float torque_error = input_torque_ - *measured_torque;
+                // Update the integral of the error
+                axis_->torque_sensor_.torque_error_integral += torque_error*controller_dt;
+                // Update the object's error for external reference
+                axis_->torque_sensor_.torque_error_ = torque_error;
+
+                // Compute the torque set-point for the motor closing the loop on the measured torque
+                // TODO the gains k_p and k_i should be TUNED for optimal performance
+                // TODO integral error computation
+                torque_setpoint_ = axis_->torque_sensor_.config_.k_p * torque_error + axis_->torque_sensor_.config_.k_i * axis_->torque_sensor_.torque_error_integral;
+
+            }
 
         } break;
         default: {

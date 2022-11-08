@@ -1221,7 +1221,7 @@ interfaces:
             doc: Enable or disable the SEA torque sensor
           gpio_pin: 
             type: uint16
-            c_setter: settorquesensor_gpio_pin
+            c_setter: set_gpio_pin
             doc: Make sure that the GPIO is in `GPIO_MODE_ANALOG`.
           K_gain: 
             type: float32
@@ -1230,7 +1230,11 @@ interfaces:
           k_p:
             type: float32
             c_setter: set_Pgain
-            unit: N/D
+            unit: N/A
+          k_i:
+            type: float32
+            c_setter: set_Igain
+            unit: 1/s
           N_spring_pairs:
             type: uint8
             c_setter: set_Nsprings
