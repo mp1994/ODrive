@@ -102,7 +102,7 @@ bool TorqueSensor::update() {
         torque_estimate_filt_ = sea_filt_;
     }
 
-    if( !config_.enable ) sea_filt_ = 0.0f;
+    if( !config_.enable ) torque_estimate_filt_ = 0.0f;
 
     return enabled_;
 
