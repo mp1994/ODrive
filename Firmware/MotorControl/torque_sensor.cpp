@@ -28,7 +28,7 @@ bool TorqueSensor::apply_config(ODriveIntf::MotorIntf::MotorType motor_type) {
 void TorqueSensor::setup() {
 
     // Do GPIO pin setting here
-    adc_gpio_ = get_gpio(config_.torquesensor_gpio_pin); // FIX this: why do we need Stm32Gpio as input if we set it here from torquesensor_gpio_pin ?
+    adc_gpio_ = get_gpio(config_.gpio_pin); // FIX this: why do we need Stm32Gpio as input if we set it here from gpio_pin ?
     adc_gpio_.config(GPIO_MODE_INPUT, GPIO_MODE_ANALOG); 
 
     is_ready_ = true;
@@ -57,7 +57,7 @@ bool TorqueSensor::do_checks() {
 // This function should only sample data when called by a high-priority ISR
 void TorqueSensor::sample_now() {
 
-    torque_voltage_meas_ = get_adc_voltage(get_gpio(config_.torquesensor_gpio_pin));
+    torque_voltage_meas_ = get_adc_voltage(get_gpio(config_.gpio_pin));
 
     // I think we don't need this, but let's leave it here for now...
     // Sample all GPIO digital input data registers, used for HALL sensors for example.

@@ -1215,7 +1215,11 @@ interfaces:
       config:
         c_is_class: False
         attributes:
-          torquesensor_gpio_pin: 
+          enable:
+            type: bool
+            c_setter: enable_sea
+            doc: Enable or disable the SEA torque sensor
+          gpio_pin: 
             type: uint16
             c_setter: settorquesensor_gpio_pin
             doc: Make sure that the GPIO is in `GPIO_MODE_ANALOG`.
