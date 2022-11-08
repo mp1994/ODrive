@@ -167,7 +167,7 @@ void AsciiProtocol::cmd_control_loop(char * pStr) {
         /* Pack feedback data */
         data[0 + 3*i] = (float32_t) axis.encoder_.pos_filt_;
         data[1 + 3*i] = (float32_t) axis.encoder_.vel_filt_;
-        // TODO replace this with the real deal
+        // TODO: SEA measure --> replace this with the real deal
         data[2 + 3*i] = 0.5f*(float(i)); 
 
         /* Error checking */
@@ -197,6 +197,7 @@ void AsciiProtocol::cmd_control_loop(char * pStr) {
     if( n_cb % 80 == 0 ) {
         enc_size += encode_ascii85((const uint8_t*) &error_status, sizeof(uint32_t), &tx_buf_[enc_size], 512);
     }
+    // 1 Hz
     if( n_cb % 8000 == 0 ) {
         enc_size += encode_ascii85((const uint8_t*) &odrv.vbus_voltage_, sizeof(float), &tx_buf_[enc_size], 512);
     }

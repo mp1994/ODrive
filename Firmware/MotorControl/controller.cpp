@@ -250,6 +250,7 @@ bool Controller::update() {
             axis_->torque_sensor_.torque_error_ = e;
 
             // torque setpoint = torque gain * error (TODO: add integral term)
+            // TODO this gain (k_p) should be tuned
             torque_setpoint_ = axis_->torque_sensor_.config_.k_p * e; // + axis_->torque_sensor_.config_.k_i * e_i
 
         } break;
