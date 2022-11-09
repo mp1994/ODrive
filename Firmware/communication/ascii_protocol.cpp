@@ -167,7 +167,7 @@ void AsciiProtocol::cmd_control_loop(char * pStr) {
         /* Pack feedback data */
         data[0 + 3*i] = (float32_t) axis.encoder_.pos_filt_;
         data[1 + 3*i] = (float32_t) axis.encoder_.vel_filt_;
-        data[2 + 3*i] = (float32_t) axis.torque_sensor_.sea_filt_;
+        data[2 + 3*i] = (float32_t) axis.torque_sensor_.torque_estimate_filt_.present().value_or(0.0f);
 
         /* Error checking */
         if( axis.error_ != 0u ) {
