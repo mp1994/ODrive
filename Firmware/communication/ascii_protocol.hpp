@@ -16,7 +16,6 @@ public:
 private:
     void cmd_set_torque_get_feedback_0(char * pStr);
     void cmd_set_torque_get_feedback_1(char * pStr);
-    void cmd_control_loop(char * pStr);
     void cmd_set_position(char * pStr, bool use_checksum);
     void cmd_set_position_wl(char * pStr, bool use_checksum);
     void cmd_set_velocity(char * pStr, bool use_checksum);
@@ -31,6 +30,12 @@ private:
     void cmd_update_axis_wdg(char * pStr, bool use_checksum);
     void cmd_unknown(char * pStr, bool use_checksum);
     void cmd_encoder(char * pStr, bool use_checksum);
+
+    // DUAL-AXIS CONTROL LOOP FUNCTION
+    // mode = 0 : torque
+    // mode = 1 : velocity
+    // mode = 2 : position
+    void control_loop(char * pStr, uint8_t mode);
 
     template<typename ... TArgs> void respond(bool include_checksum, const char * fmt, TArgs&& ... args);
     void respond_byte(bool include_checksum, uint8_t* tx_data, size_t count);

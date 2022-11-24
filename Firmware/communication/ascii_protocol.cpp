@@ -122,7 +122,9 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
         case 'a': cmd_set_torque_get_feedback_0(cmd);                 break;  // custom: torque command + feedback (pos vel Iq)
         case 'b': cmd_set_torque_get_feedback_1(cmd);                 break;
 
-        case 'T': cmd_control_loop(cmd);                              break; // custom: dual-axis control loop
+        case 'T': control_loop(cmd, 0);                               break; // custom: dual-axis control loop
+        case 'V': control_loop(cmd, 1);                               break; // custom: dual-axis velocity loop
+        case 'P': control_loop(cmd, 2);                               break; // custom: dual-axis position loop
 
         case 'p': cmd_set_position(cmd, use_checksum);                break;  // position control
         case 'q': cmd_set_position_wl(cmd, use_checksum);             break;  // position control with limits
@@ -141,27 +143,35 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
     }
 }
 
-void AsciiProtocol::cmd_control_loop(char * pStr) {
+void AsciiProtocol::control_loop(char * pStr, uint8_t mode) {
 
     // Counter for benchmarking
     odrv.n_evt_ascii_++; 
 
     // Array for feedback data
     float32_t data[6];
-
     // Error feedback
     uint32_t error_status = 0u;
     error_status |= odrv.error_;
 
-    /* Get torque setpoints */
-    float32_t torque_setpoint[2] = {0.0f};
-    decode_ascii85((uint8_t*) pStr+1, 2*float_enc_size, (uint8_t*) torque_setpoint, 2*float_dec_size);
+    /* Get setpoints */
+    float32_t setpoint[2] = {0.0f};
+    decode_ascii85((uint8_t*) pStr+1, 2*float_enc_size, (uint8_t*) setpoint, 2*float_dec_size);
     
     for( uint8_t i = 0; i < 2; i++ ) {
 
-        /* Set torque */
+        /* Update the set-point */
         Axis& axis = axes[i];
-        axis.controller_.input_torque_ = torque_setpoint[i];
+        if( mode == 0 ) {
+            axis.controller_.input_torque_ = setpoint[i];
+        }
+        else if( mode == 1 ) {
+            axis.controller_.input_vel_ = setpoint[i];
+        }
+        else if( mode == 2 ) {
+            axis.controller_.input_pos_ = setpoint[i];
+        }
+        // Feed the watchdog
         axis.watchdog_feed();
 
         /* Pack feedback data */
