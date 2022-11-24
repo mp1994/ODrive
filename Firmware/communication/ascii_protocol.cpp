@@ -119,13 +119,15 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
 
     // check incoming packet type
     switch(cmd[0]) {
-        case 'a': cmd_set_torque_get_feedback_0(cmd);                 break;  // custom: torque command + feedback (pos vel Iq)
-        case 'b': cmd_set_torque_get_feedback_1(cmd);                 break;
-
+        case 'a': cmd_set_ref_get_feedback(cmd, 0, 0);                break;  // custom: torque command + feedback (pos vel Iq)
+        case 'b': cmd_set_ref_get_feedback(cmd, 1, 0);                break;
+        case 'x': cmd_set_ref_get_feedback(cmd, 0, 1);                break;
+        case 'y': cmd_set_ref_get_feedback(cmd, 1, 1);                break;
+        case 'm': cmd_set_ref_get_feedback(cmd, 0, 2);                break;
+        case 'n': cmd_set_ref_get_feedback(cmd, 1, 2);                break;
         case 'T': control_loop(cmd, 0);                               break; // custom: dual-axis control loop
         case 'V': control_loop(cmd, 1);                               break; // custom: dual-axis velocity loop
         case 'P': control_loop(cmd, 2);                               break; // custom: dual-axis position loop
-
         case 'p': cmd_set_position(cmd, use_checksum);                break;  // position control
         case 'q': cmd_set_position_wl(cmd, use_checksum);             break;  // position control with limits
         case 'v': cmd_set_velocity(cmd, use_checksum);                break;  // velocity control
@@ -219,89 +221,47 @@ void AsciiProtocol::control_loop(char * pStr, uint8_t mode) {
 
 }
 
-void AsciiProtocol::cmd_set_torque_get_feedback_0(char* pStr) {
+void AsciiProtocol::cmd_set_ref_get_feedback(char * pStr, uint8_t axis_num, uint8_t mode) {
 
-    if( pStr[0] == 'a' ) {
+    odrv.n_evt_ascii_++;    // counter for debugging
 
-        odrv.n_evt_ascii_++;    // counter for debugging
+    /* Get float setpoint */
+    float32_t setpoint = 0.0;
+    decode_ascii85((uint8_t*) pStr+1, float_enc_size, (uint8_t*) &setpoint, float_dec_size);
+    Axis& axis = axes[axis_num];
 
-        /* Get float setpoint */
-        float32_t torque_setpoint = 0.0;
-        decode_ascii85((uint8_t*) pStr+1, float_enc_size, (uint8_t*) &torque_setpoint, float_dec_size);
-        Axis& axis = axes[0];
-
-        /* Set torque */
-        axis.controller_.input_torque_ = torque_setpoint;
-        axis.watchdog_feed();
-
-        /* Pack feedback data */
-        uint32_t n_cb = odrv.n_evt_control_loop_;
-        float32_t data[4];
-        data[0] = (float32_t) axis.encoder_.pos_filt_;
-        data[1] = (float32_t) axis.encoder_.vel_filt_;
-        data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
-        data[3] = (float32_t) axis.torque_sensor_.sea_filt_;
-
-        /* Encode feedback data */
-        size_t enc_size = 0;
-        enc_size += encode_ascii85((const uint8_t*) &n_cb, sizeof(uint32_t), &tx_buf_[0], 512);
-        if( enc_size < 0 ) respond(false, "0 invalid uint32_t encoding");
-        enc_size += encode_ascii85((const uint8_t*) data, 4*sizeof(float), &tx_buf_[enc_size], 512);
-        if( enc_size < 0 ) respond(false, "0 invalid float encoding");
-
-        tx_buf_[enc_size] = 0x0A; // terminator ('\n')
-
-        /* Write over USB */
-        sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be 26 bytes
-        sink_.maybe_start_async_write();
-
+    /* Update the setpoint */
+    if( mode == 0 ) {
+        axis.controller_.input_torque_ = setpoint;
     }
-    else {
-        respond(false, "0 invalid command ");
+    else if( mode == 1 ) {
+        axis.controller_.input_vel_ = setpoint;
     }
-
-}
-
-void AsciiProtocol::cmd_set_torque_get_feedback_1(char* pStr) {
-
-   if( pStr[0] == 'b' ) {
-
-        odrv.n_evt_ascii_++;    // counter for debugging
-
-        /* Get float setpoint */
-        float32_t torque_setpoint = 0.0;
-        decode_ascii85((uint8_t*) pStr+1, float_enc_size, (uint8_t*) &torque_setpoint, float_dec_size);
-        Axis& axis = axes[1];
-
-        /* Set torque */
-        axis.controller_.input_torque_ = torque_setpoint;
-        axis.watchdog_feed();
-
-        /* Pack feedback data */
-        uint32_t n_cb = odrv.n_evt_control_loop_;
-        float32_t data[4];
-        data[0] = (float32_t) axis.encoder_.pos_estimate_.any().value_or(0.0f);
-        data[1] = (float32_t) axis.encoder_.vel_estimate_.any().value_or(0.0f);
-        data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
-        data[3] = (float32_t) axis.torque_sensor_.torque_estimate_.any().value_or(0.0f);
-
-        /* Encode feedback data */
-        size_t enc_size = 0;
-        enc_size += encode_ascii85((const uint8_t*) &n_cb, sizeof(uint32_t), &tx_buf_[0], 512);
-        if( enc_size < 0 ) respond(false, "0 invalid uint32_t encoding");
-        enc_size += encode_ascii85((const uint8_t*) data, 4*sizeof(float), &tx_buf_[enc_size], 512);
-        if( enc_size < 0 ) respond(false, "0 invalid float encoding");
-
-        tx_buf_[enc_size] = 0x0A; // terminator ('\n')
-
-        /* Write over USB */
-        sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be 26 bytes
-        sink_.maybe_start_async_write();
-
+    else if( mode == 2 ) {
+        axis.controller_.input_pos_ = setpoint;
     }
-    else {
-        respond(false, "1 invalid command ");
-    }
+    axis.watchdog_feed();
+
+    /* Pack feedback data */
+    uint32_t n_cb = odrv.n_evt_control_loop_;
+    float32_t data[4];
+    data[0] = (float32_t) axis.encoder_.pos_filt_;
+    data[1] = (float32_t) axis.encoder_.vel_filt_;
+    data[2] = (float32_t) axis.motor_.current_control_.Iq_measured_;
+    data[3] = (float32_t) axis.torque_sensor_.sea_filt_;
+
+    /* Encode feedback data */
+    size_t enc_size = 0;
+    enc_size += encode_ascii85((const uint8_t*) &n_cb, sizeof(uint32_t), &tx_buf_[0], 512);
+    if( enc_size < 0 ) respond(false, "0 invalid uint32_t encoding");
+    enc_size += encode_ascii85((const uint8_t*) data, 4*sizeof(float), &tx_buf_[enc_size], 512);
+    if( enc_size < 0 ) respond(false, "0 invalid float encoding");
+
+    tx_buf_[enc_size] = 0x0A; // terminator ('\n')
+
+    /* Write over USB */
+    sink_.write({(const uint8_t*) tx_buf_, 1+enc_size});    // should always be 26 bytes
+    sink_.maybe_start_async_write();
 
 }
 
