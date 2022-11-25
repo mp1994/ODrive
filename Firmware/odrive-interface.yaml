@@ -533,6 +533,8 @@ interfaces:
           sensorless_ramp: LockinConfig
           general_lockin: LockinConfig
           can: CanConfig
+          passive_actuation: {type: bool, c_setter: 'enable_passive_actuation'}
+          analog_encoder_pin: {type: uint8, c_setter: 'set_analog_encoder_pin'}
       motor: Motor
       controller: Controller
       encoder: Encoder

@@ -90,10 +90,18 @@ public:
 
         CANConfig_t can;
 
+        // Use this axis with a passive joint (e.g., J4 for KAIROS exoskeleton)
+        // Inside the control loop, just give a position feedback from the encoder
+        bool passive_actuation = false;
+        uint8_t analog_encoder_pin = -1;
+
         // custom setters
         Axis* parent = nullptr;
         void set_step_gpio_pin(uint16_t value) { step_gpio_pin = value; parent->decode_step_dir_pins(); }
         void set_dir_gpio_pin(uint16_t value) { dir_gpio_pin = value; parent->decode_step_dir_pins(); }
+        void enable_passive_actuation(bool value) { passive_actuation = value; }
+        void set_analog_encoder_pin(uint8_t value) { analog_encoder_pin = passive_actuation == true ? value : -1; }
+
     };
 
     struct Homing_t {
