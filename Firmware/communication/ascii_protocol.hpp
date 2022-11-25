@@ -14,11 +14,6 @@ public:
     void start();
 
 private:
-    void cmd_set_torque_get_feedback_0(char * pStr);
-    void cmd_set_torque_get_feedback_1(char * pStr);
-    void cmd_set_vel_get_feedback_0(char * pStr);
-    void cmd_set_vel_get_feedback_1(char * pStr);
-
     // Single axis
     void cmd_set_ref_get_feedback(char * pStr, uint8_t axis, uint8_t mode);
 
