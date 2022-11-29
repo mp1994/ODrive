@@ -533,14 +533,13 @@ interfaces:
           sensorless_ramp: LockinConfig
           general_lockin: LockinConfig
           can: CanConfig
-          passive_actuation: {type: bool, c_setter: 'enable_passive_actuation'}
-          analog_encoder_pin: {type: uint8, c_setter: 'set_analog_encoder_pin'}
       motor: Motor
       controller: Controller
       encoder: Encoder
       acim_estimator: AcimEstimator
       sensorless_estimator: SensorlessEstimator
       torque_sensor: TorqueSensor
+      analog_encoder: AnalogEncoder
       trap_traj: TrapezoidalTrajectory
       min_endstop: Endstop
       max_endstop: Endstop
@@ -1245,8 +1244,46 @@ interfaces:
             type: float32
             c_setter: set_TorqueOffset
             unit: Nm
-          
 
+  ODrive.AnalogEncoder:
+    c_is_class: True
+    attributes:
+      is_ready: readonly bool
+      pos_voltage_estimate: 
+        type: readonly float32
+        unit: Volt
+        doc: Reading from the ADC [voltage]
+      pos_estimate: 
+        type: readonly float32
+        c_getter: pos_estimate_.any().value_or(0.0f)
+        unit: turn
+        doc: Position estimate from the analog potentiometer. 
+      pos_estimate_filt:
+        type: readonly float32
+        c_getter: pos_estimate_filt_.any().value_or(0.0f)
+        unit: turn
+        doc: Position estimate from the potentiometer, filtered with a 8-sample average (reduced to 1 kHz update rate)
+      config:
+        c_is_class: False
+        attributes:
+          enable:
+            type: bool
+            c_setter: enable_analog_encoder
+            doc: Enable or disable the analog encoder
+          gpio_pin: 
+            type: uint16
+            c_setter: set_gpio_pin
+            doc: Make sure that the GPIO is in `GPIO_MODE_ANALOG`.
+          K_Volt_to_Pos: 
+            type: float32
+            c_setter: set_K
+            unit: turn/V
+            doc: Set the voltage-to-position gain for the analog encoder [turn/V]
+          pos_offset:
+            type: float32
+            c_setter: set_offset
+            unit: turn
+            doc: Set the offset for the analog position encoder
 
   ODrive.Encoder:
     c_is_class: True

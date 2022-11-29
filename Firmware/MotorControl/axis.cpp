@@ -13,6 +13,7 @@ Axis::Axis(int axis_num,
            osPriority thread_priority,
            Encoder& encoder,
            TorqueSensor& torque_sensor,
+           AnalogEncoder& analog_encoder,
            SensorlessEstimator& sensorless_estimator,
            Controller& controller,
            Motor& motor,
@@ -26,6 +27,7 @@ Axis::Axis(int axis_num,
       thread_priority_(thread_priority),
       encoder_(encoder),
       torque_sensor_(torque_sensor),
+      analog_encoder_(analog_encoder),
       sensorless_estimator_(sensorless_estimator),
       controller_(controller),
       motor_(motor),
@@ -36,6 +38,7 @@ Axis::Axis(int axis_num,
 {
     encoder_.axis_ = this;
     torque_sensor_.axis_ = this;
+    analog_encoder_.axis_ = this;
     sensorless_estimator_.axis_ = this;
     controller_.axis_ = this;
     motor_.axis_ = this;

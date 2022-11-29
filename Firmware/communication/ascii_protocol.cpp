@@ -167,7 +167,7 @@ void AsciiProtocol::control_loop(char * pStr, uint8_t mode) {
 
         // Skip this axis if it is configured as passive
         if( axis.config_.passive_actuation ) {
-            data[0 + 3*i] = get_adc_voltage(get_gpio(axis.config_.analog_encoder_pin)); // get analog read here
+            data[0 + 3*i] = get_adc_voltage(get_gpio(axis.config_.analog_encoder_pin)); 
             data[1 + 3*i] = 0.0f; 
             data[2 + 3*i] = 0.0f;
         }

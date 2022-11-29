@@ -121,6 +121,15 @@ TorqueSensor torque_sensors[AXIS_COUNT] {
     }
 };
 
+AnalogEncoder analog_encoders[AXIS_COUNT] {
+    {
+        Stm32Gpio()
+    },
+    {
+        Stm32Gpio()
+    }
+};
+
 // TODO: this has no hardware dependency and should be allocated depending on config
 Endstop endstops[2 * AXIS_COUNT];
 MechanicalBrake mechanical_brakes[AXIS_COUNT];
@@ -137,6 +146,7 @@ std::array<Axis, AXIS_COUNT> axes{{
         (osPriority)(osPriorityHigh + (osPriority)1), // thread_priority
         encoders[0], // encoder
         torque_sensors[0], // torque sensors
+        analog_encoders[0], // analog encoder
         sensorless_estimators[0], // sensorless_estimator
         controllers[0], // controller
         motors[0], // motor
@@ -156,6 +166,7 @@ std::array<Axis, AXIS_COUNT> axes{{
         osPriorityHigh, // thread_priority
         encoders[1], // encoder
         torque_sensors[1], // torque sensors
+        analog_encoders[1], // analog encoders
         sensorless_estimators[1], // sensorless_estimator
         controllers[1], // controller
         motors[1], // motor

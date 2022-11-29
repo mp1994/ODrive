@@ -78,6 +78,7 @@ odrive_firmware_pkg = {
         'MotorControl/thermistor.cpp',
         'MotorControl/encoder.cpp',
         'MotorControl/torque_sensor.cpp',
+        'MotorControl/analog_encoder.cpp',
         'MotorControl/endstop.cpp',
         'MotorControl/acim_estimator.cpp',
         'MotorControl/mechanical_brake.cpp',

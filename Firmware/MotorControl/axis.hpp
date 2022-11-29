@@ -5,6 +5,7 @@ class Axis;
 
 #include "encoder.hpp"
 #include "torque_sensor.hpp"
+#include "analog_encoder.hpp"
 #include "acim_estimator.hpp"
 #include "sensorless_estimator.hpp"
 #include "controller.hpp"
@@ -36,6 +37,7 @@ public:
         TaskTimer thermistor_update;
         TaskTimer encoder_update;
         TaskTimer torque_sensor_update;
+        TaskTimer analog_encoder_update;
         TaskTimer sensorless_estimator_update;
         TaskTimer endstop_update;
         TaskTimer can_heartbeat;
@@ -119,6 +121,7 @@ public:
             osPriority thread_priority,
             Encoder& encoder,
             TorqueSensor& torque_sensor,
+            AnalogEncoder& analog_encoder,
             SensorlessEstimator& sensorless_estimator,
             Controller& controller,
             Motor& motor,
@@ -170,6 +173,7 @@ public:
 
     Encoder& encoder_;
     TorqueSensor& torque_sensor_;
+    AnalogEncoder& analog_encoder_;
     AcimEstimator acim_estimator_;
     SensorlessEstimator& sensorless_estimator_;
     Controller& controller_;

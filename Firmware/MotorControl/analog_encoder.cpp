@@ -3,13 +3,13 @@
 #include <Drivers/STM32/stm32_system.h>
 #include <bitset>
 
-TorqueSensor::TorqueSensor(Stm32Gpio adc_gpio) : 
+AnalogEncoder::AnalogEncoder(Stm32Gpio adc_gpio) : 
         adc_gpio_(adc_gpio)
 {
     enabled_ = true;
 }
 
-TorqueSensor::TorqueSensor(uint16_t gpio_num) :
+AnalogEncoder::AnalogEncoder(uint16_t gpio_num) :
         pin_number_(gpio_num)
 {
     if( gpio_num > 0 && gpio_num < 9 ) {
@@ -18,14 +18,14 @@ TorqueSensor::TorqueSensor(uint16_t gpio_num) :
     }
 }
 
-bool TorqueSensor::apply_config(ODriveIntf::MotorIntf::MotorType motor_type) {
+bool AnalogEncoder::apply_config() {
 
     config_.parent = this;
     return true;
 
 }
 
-void TorqueSensor::setup() {
+void AnalogEncoder::setup() {
 
     // Do GPIO pin setting here
     adc_gpio_ = get_gpio(config_.gpio_pin); // FIX this: why do we need Stm32Gpio as input if we set it here from gpio_pin ?
@@ -38,26 +38,26 @@ void TorqueSensor::setup() {
 
 }
 
-void TorqueSensor::set_error(void) {
-    torque_estimate_valid_ = false;
+void AnalogEncoder::set_error(void) {
+    position_estimate_valid_ = false;
 }
 
-// bool TorqueSensor::do_checks(){
+// bool AnalogEncoder::do_checks(){
 //     return error_ == ERROR_NONE;
 // }
 
 // We probably need to implement this in a smarter way...
 // This is pointless now...
-bool TorqueSensor::do_checks() {
+bool AnalogEncoder::do_checks() {
     is_ready_ = enabled_;
     return enabled_;
 }
 
 
 // This function should only sample data when called by a high-priority ISR
-void TorqueSensor::sample_now() {
+void AnalogEncoder::sample_now() {
 
-    torque_voltage_meas_ = get_adc_voltage(get_gpio(config_.gpio_pin));
+    pos_voltage_estimate_ = get_adc_voltage(get_gpio(config_.gpio_pin));
 
     // I think we don't need this, but let's leave it here for now...
     // Sample all GPIO digital input data registers, used for HALL sensors for example.
@@ -68,7 +68,7 @@ void TorqueSensor::sample_now() {
 }
 
 // I think we don't need this, but let's leave it here for now...
-// bool TorqueSensor::read_sampled_gpio(Stm32Gpio gpio) {
+// bool AnalogEncoder::read_sampled_gpio(Stm32Gpio gpio) {
 //     for (size_t i = 0; i < sizeof(ports_to_sample) / sizeof(ports_to_sample[0]); ++i) {
 //         if (ports_to_sample[i] == gpio.port_) {
 //             return port_samples_[i] & gpio.pin_mask_;
@@ -79,30 +79,29 @@ void TorqueSensor::sample_now() {
 
 
 // Update the torque estimate based on the newest sampled value
-bool TorqueSensor::update() {
+bool AnalogEncoder::update() {
 
-    // Update measured displacement
-    torque_dx_estimate_ = config_.K_VtoX * (torque_voltage_meas_ - 1.65f);
-    // Update measured torque
-    torque_nm_estimate_ = config_.K_XtoM * torque_dx_estimate_;
+    if( !config_.enable ) {
+        pos_estimate_ = 0.0f;
+        pos_estimate_filt_ = 0.0f;
+        return false;
+    } 
 
-    // Output from TorqueSensor to the Controller
-    torque_estimate_ = (config_.K_gain * (torque_voltage_meas_ - 1.65f)) - config_.torque_offset;
+    // Output from AnalogEncoder to the Controller
+    pos_estimate_ = config_.K_Volt_to_Pos * (pos_voltage_estimate_ - 1.65f); - config_.pos_offset;
 
     // Torque filtering
-    sea_buf_[sea_buf_count_ % 8] = (float) torque_estimate_.any().value_or(0.0f);
-    sea_buf_count_++;
+    analog_encoder_buf_[analog_enc_buf_count_ % 8] = (float) pos_estimate_.any().value_or(0.0f);
+    analog_enc_buf_count_++;
     // Compute the average only when the buffer is filled with values
-    if( sea_buf_count_ % 8 == 0 ) {
-        sea_filt_ = 0.0f;
+    if( analog_enc_buf_count_ % 8 == 0 ) {
+        enc_filt_ = 0.0f;
         for( uint8_t i = 0; i < 8; i++ ) {
-            sea_filt_ += sea_buf_[i];
+            enc_filt_ += analog_encoder_buf_[i];
         }   
-        sea_filt_ = sea_filt_ / 8.0f;
-        torque_estimate_filt_ = sea_filt_;
+        enc_filt_ = enc_filt_ / 8.0f;
+        pos_estimate_filt_ = enc_filt_;
     }
-
-    if( !config_.enable ) torque_estimate_filt_ = 0.0f;
 
     return enabled_;
 
