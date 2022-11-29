@@ -90,6 +90,7 @@ static bool config_read_all() {
     for (size_t i = 0; (i < AXIS_COUNT) && success; ++i) {
         success = config_manager.read(&encoders[i].config_) &&
                   config_manager.read(&axes[i].torque_sensor_.config_) && 
+                  config_manager.read(&axes[i].analog_encoder_.config_) && 
                   config_manager.read(&axes[i].sensorless_estimator_.config_) &&
                   config_manager.read(&axes[i].controller_.config_) &&
                   config_manager.read(&axes[i].trap_traj_.config_) &&
@@ -111,6 +112,7 @@ static bool config_write_all() {
     for (size_t i = 0; (i < AXIS_COUNT) && success; ++i) {
         success = config_manager.write(&encoders[i].config_) &&
                   config_manager.write(&axes[i].torque_sensor_.config_) && 
+                  config_manager.write(&axes[i].analog_encoder_.config_) && 
                   config_manager.write(&axes[i].sensorless_estimator_.config_) &&
                   config_manager.write(&axes[i].controller_.config_) &&
                   config_manager.write(&axes[i].trap_traj_.config_) &&
@@ -131,6 +133,7 @@ static void config_clear_all() {
     for (size_t i = 0; i < AXIS_COUNT; ++i) {
         encoders[i].config_ = {};
         axes[i].torque_sensor_.config_ = {};
+        axes[i].analog_encoder_.config_ = {};
         axes[i].sensorless_estimator_.config_ = {};
         axes[i].controller_.config_ = {};
         axes[i].controller_.config_.load_encoder_axis = i;
