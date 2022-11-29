@@ -166,10 +166,15 @@ void AsciiProtocol::control_loop(char * pStr, uint8_t mode) {
         Axis& axis = axes[i];
 
         // Skip this axis if it is configured as passive
-        if( axis.config_.passive_actuation ) {
-            data[0 + 3*i] = get_adc_voltage(get_gpio(axis.config_.analog_encoder_pin)); 
-            data[1 + 3*i] = 0.0f; 
+        if( axis.analog_encoder_.config_.enable == true ) {
+            data[0 + 3*i] = axis.analog_encoder_.pos_estimate_filt_.present().value_or(0.0f);
+            data[1 + 3*i] = axis.analog_encoder_.vel_estimate_filt_.present().value_or(0.0f);
             data[2 + 3*i] = 0.0f;
+            // WARNING: this is not feeding the watchdog for this axis
+            // It SHOULD not be a problem since there is no motor for this axis, 
+            // hence the watchdog can be safely disabled.
+            // TODO think of a better solution...
+            continue;
         }
 
         if( mode == 0 ) {

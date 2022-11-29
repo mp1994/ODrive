@@ -32,7 +32,8 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "algorithm": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "bitset": "cpp"
     },
     "cSpell.enabled": false
 }

@@ -90,17 +90,23 @@ bool AnalogEncoder::update() {
     // Output from AnalogEncoder to the Controller
     pos_estimate_ = config_.K_Volt_to_Pos * (pos_voltage_estimate_ - 1.65f); - config_.pos_offset;
 
-    // Torque filtering
+    // Filtering
     analog_encoder_buf_[analog_enc_buf_count_ % 8] = (float) pos_estimate_.any().value_or(0.0f);
+    // Try to estimate the velocity... this may suck.
+    analog_encoder_buf_vel_[analog_enc_buf_count_ % 8] = (float) (analog_encoder_buf_[(analog_enc_buf_count_%8)] - analog_encoder_buf_[(analog_enc_buf_count_%8)-1])/(0.000125f);
     analog_enc_buf_count_++;
     // Compute the average only when the buffer is filled with values
     if( analog_enc_buf_count_ % 8 == 0 ) {
         enc_filt_ = 0.0f;
+        vel_filt_ = 0.0f;
         for( uint8_t i = 0; i < 8; i++ ) {
             enc_filt_ += analog_encoder_buf_[i];
+            vel_filt_ += analog_encoder_buf_vel_[i];
         }   
         enc_filt_ = enc_filt_ / 8.0f;
+        vel_filt_ = vel_filt_ / 8.0f;
         pos_estimate_filt_ = enc_filt_;
+        vel_estimate_filt_ = vel_filt_;
     }
 
     return enabled_;

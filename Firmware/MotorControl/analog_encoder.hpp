@@ -37,8 +37,10 @@ public:
     // Reading from the ADC
     float pos_voltage_estimate_ = 0.0f;
     // Outputs --> read from Axis and Controller
-    OutputPort<float> pos_estimate_ = 0.0f;
+    OutputPort<float> pos_estimate_      = 0.0f;
     OutputPort<float> pos_estimate_filt_ = 0.0f;
+    OutputPort<float> vel_estimate_      = 0.0f;
+    OutputPort<float> vel_estimate_filt_ = 0.0f;
     
     bool apply_config();
     void setup();
@@ -57,8 +59,10 @@ public:
     Config_t config_;
 
     float* analog_encoder_buf_ = (float*) malloc(8*sizeof(float));
+    float* analog_encoder_buf_vel_ = (float*) malloc(8*sizeof(float));
     volatile uint32_t analog_enc_buf_count_ = 0;
     volatile float enc_filt_ = 0.0f;
+    volatile float vel_filt_ = 0.0f;
 
     bool position_estimate_valid_ = false;
 
