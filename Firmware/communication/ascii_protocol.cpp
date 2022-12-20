@@ -192,7 +192,15 @@ void AsciiProtocol::control_loop(char * pStr, uint8_t mode) {
         /* Pack feedback data */
         data[0 + 3*i] = (float32_t) axis.encoder_.pos_filt_;
         data[1 + 3*i] = (float32_t) axis.encoder_.vel_filt_;
-        data[2 + 3*i] = (float32_t) axis.torque_sensor_.torque_estimate_filt_.present().value_or(0.0f);
+        // Torque feedback either from the SEA torque sensor or motor current estimate
+        if( axis.torque_sensor_.enabled_ ) {
+            data[2 + 3*i] = (float32_t) axis.torque_sensor_.torque_estimate_filt_.present().value_or(0.0f);
+        }
+        else {
+            // TODO add filtering for Iq_measured
+            data[2 + 3*i] = (float32_t) axis.motor_.current_control_.Iq_measured_;
+        }
+        
 
         /* Error checking */
         if( axis.error_ != 0u ) {
