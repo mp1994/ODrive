@@ -162,7 +162,6 @@ void AsciiProtocol::control_loop(char * pStr, uint8_t mode) {
     
     for( uint8_t i = 0; i < 2; i++ ) {
 
-        /* Update the set-point */
         Axis& axis = axes[i];
 
         // Skip this axis if it is configured as passive
@@ -177,6 +176,7 @@ void AsciiProtocol::control_loop(char * pStr, uint8_t mode) {
             continue;
         }
 
+        // Update the set-point
         if( mode == 0 ) {
             axis.controller_.input_torque_ = setpoint[i];
         }
@@ -186,19 +186,20 @@ void AsciiProtocol::control_loop(char * pStr, uint8_t mode) {
         else if( mode == 2 ) {
             axis.controller_.input_pos_ = setpoint[i];
         }
+        
         // Feed the watchdog
         axis.watchdog_feed();
 
         /* Pack feedback data */
         data[0 + 3*i] = (float32_t) axis.encoder_.pos_filt_;
         data[1 + 3*i] = (float32_t) axis.encoder_.vel_filt_;
-        // Torque feedback either from the SEA torque sensor or motor current estimate
-        if( axis.torque_sensor_.enabled_ ) {
+        // Torque feedback either from the SEA torque sensor or motor current
+        if( axis.torque_sensor_.config_.enable) {
             data[2 + 3*i] = (float32_t) axis.torque_sensor_.torque_estimate_filt_.present().value_or(0.0f);
         }
         else {
             // TODO add filtering for Iq_measured
-            data[2 + 3*i] = (float32_t) axis.motor_.current_control_.Iq_measured_;
+            data[2 + 3*i] = (float32_t) axis.motor_.config_.torque_constant * axis.motor_.current_control_.Iq_measured_;
         }
         
 
